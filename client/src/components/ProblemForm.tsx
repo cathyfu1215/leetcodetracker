@@ -56,6 +56,10 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [leetcodeNumberStatus, setLeetcodeNumberStatus] = useState<"valid" | "invalid" | "checking" | null>(null);
+  const [confirmedConstraints, setConfirmedConstraints] = useState<Record<number, boolean>>({});
+  const [confirmedExamples, setConfirmedExamples] = useState<Record<number, boolean>>({});
+  const [confirmedPatterns, setConfirmedPatterns] = useState<Record<number, boolean>>({});
+  const [confirmedTricks, setConfirmedTricks] = useState<Record<number, boolean>>({});
 
   // Update the default values for constraints and examples to be empty arrays
   const form = useForm<FormValues>({
@@ -112,17 +116,23 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
   const { 
     fields: constraintFields, 
     append: appendConstraint, 
-    remove: removeConstraint 
+    remove: removeConstraint, 
+    update: updateConstraint 
   } = useFieldArray({
     control: form.control,
-    // Using a type assertion to satisfy TypeScript
-    name: "constraints" as any
+    name: "constraints" as const
   });
+
+  // Removed validation from the Add Constraint button and moved it to the Confirm button.
+  const handleAddConstraint = () => {
+    appendConstraint(""); // Always append an empty string when adding a new constraint
+  };
 
   const { 
     fields: exampleFields, 
     append: appendExample, 
-    remove: removeExample 
+    remove: removeExample, 
+    update: updateExample 
   } = useFieldArray({
     control: form.control,
     name: "examples" as const
@@ -131,7 +141,8 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
   const { 
     fields: patternFields, 
     append: appendPattern, 
-    remove: removePattern 
+    remove: removePattern, 
+    update: updatePattern 
   } = useFieldArray({
     control: form.control,
     name: "patterns" as const
@@ -140,7 +151,8 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
   const { 
     fields: trickFields, 
     append: appendTrick, 
-    remove: removeTrick 
+    remove: removeTrick, 
+    update: updateTrick 
   } = useFieldArray({
     control: form.control,
     name: "tricks" as const
@@ -349,8 +361,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                     variant="link"
                     size="sm"
                     className="h-auto p-0 text-primary"
-                    // Using a more compatible approach for appending
-                    onClick={() => appendConstraint("New constraint" as any)}
+                    onClick={handleAddConstraint}
                   >
                     <Plus className="h-4 w-4 mr-1" /> Add Constraint
                   </Button>
@@ -358,28 +369,86 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                 <div className="space-y-2 border rounded-md p-3 bg-slate-50">
                   {constraintFields.length > 0 ? (
                     constraintFields.map((field, index) => (
-                      <div key={field.id} className="flex items-center">
-                        <FormField
-                          control={form.control}
-                          name={`constraints.${index}`}
-                          render={({ field }) => (
-                            <FormItem className="flex-grow">
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="ml-2"
-                          onClick={() => removeConstraint(index)}
-                        >
-                          <X className="h-4 w-4 text-slate-400 hover:text-red-500" />
-                        </Button>
+                      <div key={field.id} className="flex items-center space-x-2">
+                        {(typeof field === "string" && field.trim() !== "") || confirmedConstraints[index] ? (
+                          <>
+                            <span className="text-sm text-gray-700 flex-grow">• {typeof field === "string" ? field : form.getValues(`constraints.${index}`)}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-red-500 hover:text-red-600"
+                              onClick={() => {
+                                removeConstraint(index);
+                                // Remove from confirmed constraints too
+                                setConfirmedConstraints(prev => {
+                                  const newState = {...prev};
+                                  delete newState[index];
+                                  return newState;
+                                });
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <FormField
+                              control={form.control}
+                              name={`constraints.${index}`}
+                              render={({ field }) => (
+                                <FormItem className="flex-grow mb-0">
+                                  <FormControl>
+                                    <Input placeholder="e.g., 1 <= nums.length <= 10^5" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                removeConstraint(index);
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="default"
+                              size="sm"
+                              onClick={() => {
+                                const currentConstraint = form.getValues(`constraints.${index}`);
+                                if (typeof currentConstraint === "string" && currentConstraint.trim() !== "") {
+                                  const updatedConstraints = [...form.getValues("constraints")];
+                                  updatedConstraints[index] = currentConstraint.trim();
+                                  form.setValue("constraints", updatedConstraints);
+                                  
+                                  // Mark this constraint as confirmed
+                                  setConfirmedConstraints(prev => ({
+                                    ...prev,
+                                    [index]: true
+                                  }));
+                                  
+                                  toast({
+                                    title: "Constraint added",
+                                    description: "Your constraint has been successfully added.",
+                                  });
+                                } else {
+                                  toast({
+                                    title: "Error",
+                                    description: "Constraint cannot be empty.",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }}
+                            >
+                              Confirm
+                            </Button>
+                          </>
+                        )}
                       </div>
                     ))
                   ) : (
@@ -407,58 +476,130 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                       <div key={field.id} className="space-y-2 pb-4 border-b last:border-0">
                         <div className="flex justify-between">
                           <span className="text-sm font-medium">Example {index + 1}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto p-0"
-                            onClick={() => removeExample(index)}
-                          >
-                            <X className="h-4 w-4 text-slate-400 hover:text-red-500" />
-                          </Button>
                         </div>
                         
-                        <FormField
-                          control={form.control}
-                          name={`examples.${index}.input`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">Input</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name={`examples.${index}.output`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">Output</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name={`examples.${index}.explanation`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">Explanation (Optional)</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        {confirmedExamples[index] ? (
+                          <div className="bg-slate-100 rounded-md p-3 space-y-1">
+                            <div className="flex">
+                              <span className="text-sm font-medium w-24">Input:</span>
+                              <span className="text-sm">{form.getValues(`examples.${index}.input`)}</span>
+                            </div>
+                            <div className="flex">
+                              <span className="text-sm font-medium w-24">Output:</span>
+                              <span className="text-sm">{form.getValues(`examples.${index}.output`)}</span>
+                            </div>
+                            {form.getValues(`examples.${index}.explanation`) && (
+                              <div className="flex">
+                                <span className="text-sm font-medium w-24">Explanation:</span>
+                                <span className="text-sm">{form.getValues(`examples.${index}.explanation`)}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-end mt-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-red-500 hover:text-red-600"
+                                onClick={() => {
+                                  removeExample(index);
+                                  setConfirmedExamples(prev => {
+                                    const newState = {...prev};
+                                    delete newState[index];
+                                    return newState;
+                                  });
+                                }}
+                              >
+                                <X className="h-4 w-4 mr-1" /> Remove
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <FormField
+                              control={form.control}
+                              name={`examples.${index}.input`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">Input</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name={`examples.${index}.output`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">Output</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name={`examples.${index}.explanation`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">Explanation (Optional)</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeExample(index)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                onClick={() => {
+                                  const input = form.getValues(`examples.${index}.input`);
+                                  const output = form.getValues(`examples.${index}.output`);
+                                  
+                                  if (!input.trim() || !output.trim()) {
+                                    toast({
+                                      title: "Error",
+                                      description: "Input and Output are required.",
+                                      variant: "destructive",
+                                    });
+                                    return;
+                                  }
+                                  
+                                  // Mark as confirmed
+                                  setConfirmedExamples(prev => ({
+                                    ...prev,
+                                    [index]: true
+                                  }));
+                                  
+                                  toast({
+                                    title: "Example added",
+                                    description: "Your example has been successfully added.",
+                                  });
+                                }}
+                              >
+                                Confirm
+                              </Button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     ))
                   ) : (
@@ -488,48 +629,112 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                       <div key={field.id} className="space-y-2 pb-4 border-b last:border-0">
                         <div className="flex justify-between">
                           <span className="text-sm font-medium">Pattern {index + 1}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto p-0"
-                            onClick={() => removePattern(index)}
-                          >
-                            <X className="h-4 w-4 text-slate-400 hover:text-red-500" />
-                          </Button>
                         </div>
                         
-                        <FormField
-                          control={form.control}
-                          name={`patterns.${index}.name`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Sliding Window" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name={`patterns.${index}.description`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">Description</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  placeholder="Explain how this pattern applies to the problem" 
-                                  className="min-h-[80px]"
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        {confirmedPatterns[index] ? (
+                          <div className="bg-slate-100 rounded-md p-3 space-y-1">
+                            <div className="font-medium text-sm">
+                              {form.getValues(`patterns.${index}.name`)}
+                            </div>
+                            <div className="text-sm">
+                              {form.getValues(`patterns.${index}.description`)}
+                            </div>
+                            <div className="flex justify-end mt-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-red-500 hover:text-red-600"
+                                onClick={() => {
+                                  removePattern(index);
+                                  setConfirmedPatterns(prev => {
+                                    const newState = {...prev};
+                                    delete newState[index];
+                                    return newState;
+                                  });
+                                }}
+                              >
+                                <X className="h-4 w-4 mr-1" /> Remove
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <FormField
+                              control={form.control}
+                              name={`patterns.${index}.name`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">Name</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="e.g., Sliding Window" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name={`patterns.${index}.description`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">Description</FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      placeholder="Explain how this pattern applies to the problem" 
+                                      className="min-h-[80px]"
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removePattern(index)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                onClick={() => {
+                                  const name = form.getValues(`patterns.${index}.name`);
+                                  const description = form.getValues(`patterns.${index}.description`);
+                                  
+                                  if (!name.trim()) {
+                                    toast({
+                                      title: "Error",
+                                      description: "Pattern name is required.",
+                                      variant: "destructive",
+                                    });
+                                    return;
+                                  }
+                                  
+                                  // Mark as confirmed
+                                  setConfirmedPatterns(prev => ({
+                                    ...prev,
+                                    [index]: true
+                                  }));
+                                  
+                                  toast({
+                                    title: "Pattern added",
+                                    description: "Your pattern has been successfully added.",
+                                  });
+                                }}
+                              >
+                                Confirm
+                              </Button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     ))
                   ) : (
@@ -557,48 +762,112 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                       <div key={field.id} className="space-y-2 pb-4 border-b last:border-0">
                         <div className="flex justify-between">
                           <span className="text-sm font-medium">Trick {index + 1}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto p-0"
-                            onClick={() => removeTrick(index)}
-                          >
-                            <X className="h-4 w-4 text-slate-400 hover:text-red-500" />
-                          </Button>
                         </div>
                         
-                        <FormField
-                          control={form.control}
-                          name={`tricks.${index}.name`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Use deque for O(1) operations" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name={`tricks.${index}.description`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">Description</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  placeholder="Explain why this trick is helpful" 
-                                  className="min-h-[80px]"
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        {confirmedTricks[index] ? (
+                          <div className="bg-slate-100 rounded-md p-3 space-y-1">
+                            <div className="font-medium text-sm">
+                              {form.getValues(`tricks.${index}.name`)}
+                            </div>
+                            <div className="text-sm">
+                              {form.getValues(`tricks.${index}.description`)}
+                            </div>
+                            <div className="flex justify-end mt-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-red-500 hover:text-red-600"
+                                onClick={() => {
+                                  removeTrick(index);
+                                  setConfirmedTricks(prev => {
+                                    const newState = {...prev};
+                                    delete newState[index];
+                                    return newState;
+                                  });
+                                }}
+                              >
+                                <X className="h-4 w-4 mr-1" /> Remove
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <FormField
+                              control={form.control}
+                              name={`tricks.${index}.name`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">Name</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="e.g., Use deque for O(1) operations" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name={`tricks.${index}.description`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">Description</FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      placeholder="Explain why this trick is helpful" 
+                                      className="min-h-[80px]"
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeTrick(index)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                onClick={() => {
+                                  const name = form.getValues(`tricks.${index}.name`);
+                                  const description = form.getValues(`tricks.${index}.description`);
+                                  
+                                  if (!name.trim()) {
+                                    toast({
+                                      title: "Error",
+                                      description: "Trick name is required.",
+                                      variant: "destructive",
+                                    });
+                                    return;
+                                  }
+                                  
+                                  // Mark as confirmed
+                                  setConfirmedTricks(prev => ({
+                                    ...prev,
+                                    [index]: true
+                                  }));
+                                  
+                                  toast({
+                                    title: "Trick added",
+                                    description: "Your trick has been successfully added.",
+                                  });
+                                }}
+                              >
+                                Confirm
+                              </Button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     ))
                   ) : (
