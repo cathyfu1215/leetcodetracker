@@ -1,12 +1,16 @@
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "./theme-provider";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-
+  // Simple toggle that adds/removes the "dark" class to the document element
   const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
+    if (document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    }
   };
 
   return (
