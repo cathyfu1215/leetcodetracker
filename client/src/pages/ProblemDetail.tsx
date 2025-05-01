@@ -217,17 +217,17 @@ export default function ProblemDetail() {
               </TabsList>
               
               <TabsContent value="problem" className="pt-4">
-                <div className="prose max-w-none">
+                <div className="prose max-w-none dark:text-slate-300">
                   {problem.content ? renderMarkdown(problem.content) : <p>No content available.</p>}
                   
-                  <h3 className="text-lg font-medium mt-4 mb-2">Constraints:</h3>
-                  <ul className="list-disc pl-5 space-y-1">
+                  <h3 className="text-lg font-medium mt-4 mb-2 dark:text-slate-200">Constraints:</h3>
+                  <ul className="list-disc pl-5 space-y-1 dark:text-slate-300">
                     {problem.constraints?.map((constraint, index) => (
                       <li key={index}>{constraint}</li>
                     ))}
                   </ul>
                   
-                  <h3 className="text-lg font-medium mt-4 mb-2">Examples:</h3>
+                  <h3 className="text-lg font-medium mt-4 mb-2 dark:text-slate-200">Examples:</h3>
                   {problem.examples?.map((example, index) => (
                     <div key={index} className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg mb-4">
                       <p className="font-medium dark:text-slate-200">Example {index + 1}:</p>
@@ -272,11 +272,11 @@ export default function ProblemDetail() {
               </TabsContent>
               
               <TabsContent value="notes" className="pt-4">
-                <div className="prose max-w-none">
+                <div className="prose max-w-none dark:text-slate-300">
                   {problem.notes ? (
                     renderMarkdown(problem.notes)
                   ) : (
-                    <p className="text-slate-500 italic">No notes added yet.</p>
+                    <p className="text-slate-500 dark:text-slate-400 italic">No notes added yet.</p>
                   )}
                 </div>
               </TabsContent>
