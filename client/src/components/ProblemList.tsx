@@ -12,6 +12,44 @@ import {
 } from '@/components/ui/select';
 import { Search } from 'lucide-react';
 
+// Helper function to extract problem number from LeetCode URL
+function extractProblemNumber(url: string): string | null {
+  if (!url) return null;
+  
+  // Try to match problem number from URL patterns
+  // Example: https://leetcode.com/problems/two-sum/ (should extract "1" or problem id)
+  // Or https://leetcode.com/problems/valid-palindrome-ii/
+  
+  // Try to extract from LeetCode URL by looking for problem numbers
+  
+  // Check for various URL patterns:
+  // Pattern 1: Extract from query parameter like ?id=123
+  const queryMatch = url.match(/[?&]id=(\d+)/);
+  if (queryMatch && queryMatch[1]) {
+    return queryMatch[1];
+  }
+  
+  // Pattern 2: Direct number in the URL after problems/ like /problems/123/
+  const numberMatch = url.match(/\/problems\/(\d+)/);
+  if (numberMatch && numberMatch[1]) {
+    return numberMatch[1];
+  }
+  
+  // Pattern 3: Look for number prefixes in problem name like "124-valid-palindrome"
+  const nameNumberMatch = url.match(/\/problems\/(\d+)-/);
+  if (nameNumberMatch && nameNumberMatch[1]) {
+    return nameNumberMatch[1];
+  }
+  
+  // If we still can't find a number, check if we can extract from the URL fragment
+  const hashMatch = url.match(/#\/problems\/(\d+)/);
+  if (hashMatch && hashMatch[1]) {
+    return hashMatch[1];
+  }
+  
+  return null;
+}
+
 type ProblemListProps = {
   problems: Problem[];
   searchTerm: string;
@@ -128,14 +166,21 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-medium dark:text-slate-200">{problem.title}</h3>
+                    <h3 className="font-medium dark:text-slate-200">
+                      {extractProblemNumber(problem.url) && (
+                        <span className="text-primary-600 dark:text-primary-400 mr-2">
+                          #{extractProblemNumber(problem.url)}
+                        </span>
+                      )}
+                      {problem.title}
+                    </h3>
                     <div className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap gap-1.5">
-                      {problem.patterns.slice(0, 2).map((pattern, index) => (
+                      {problem.patterns?.slice(0, 2).map((pattern, index) => (
                         <span key={index} className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full px-2 py-0.5">
                           {pattern.name}
                         </span>
                       ))}
-                      {problem.patterns.length > 2 && (
+                      {problem.patterns && problem.patterns.length > 2 && (
                         <span className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full px-2 py-0.5">
                           +{problem.patterns.length - 2}
                         </span>

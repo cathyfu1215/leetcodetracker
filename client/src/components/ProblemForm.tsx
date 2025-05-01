@@ -57,7 +57,17 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: problem ? {
-      ...problem
+      title: problem.title || "",
+      url: problem.url || "",
+      content: problem.content || "",
+      constraints: problem.constraints || [],
+      examples: problem.examples || [],
+      patterns: problem.patterns || [],
+      tricks: problem.tricks || [],
+      notes: problem.notes || "",
+      difficulty: problem.difficulty || "Medium",
+      createdAt: problem.createdAt || new Date().toISOString(),
+      updatedAt: problem.updatedAt || new Date().toISOString()
     } : {
       title: "",
       url: "",
