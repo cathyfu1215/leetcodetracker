@@ -1,0 +1,166 @@
+import { useState, useMemo } from 'react';
+import { useLocation } from 'wouter';
+import { Problem, Difficulty } from '@shared/schema';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { Search } from 'lucide-react';
+
+type ProblemListProps = {
+  problems: Problem[];
+  searchTerm: string;
+  onAddNew: () => void;
+  onSearch: (value: string) => void;
+};
+
+export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }: ProblemListProps) {
+  const [, setLocation] = useLocation();
+  const [difficulty, setDifficulty] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("latest");
+  
+  const handleProblemClick = (id: number) => {
+    setLocation(`/problems/${id}`);
+  };
+
+  const filteredProblems = useMemo(() => {
+    return problems
+      .filter(problem => {
+        const matchesSearch = 
+          problem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          problem.patterns.some(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        
+        const matchesDifficulty = 
+          difficulty === "all" || 
+          problem.difficulty === difficulty;
+        
+        return matchesSearch && matchesDifficulty;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case "latest":
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          case "oldest":
+            return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          case "a-z":
+            return a.title.localeCompare(b.title);
+          default:
+            return 0;
+        }
+      });
+  }, [problems, searchTerm, difficulty, sortBy]);
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case "Easy":
+        return "bg-green-100 text-green-800";
+      case "Medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "Hard":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-slate-100 text-slate-800";
+    }
+  };
+
+  return (
+    <div className="lg:w-1/3 mb-6 lg:mb-0">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold text-slate-800">
+          Problems ({filteredProblems.length})
+        </h2>
+        
+        <div className="flex items-center space-x-2">
+          <Select
+            value={difficulty}
+            onValueChange={setDifficulty}
+          >
+            <SelectTrigger className="h-9 w-[150px]">
+              <SelectValue placeholder="Difficulty" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Difficulties</SelectItem>
+              <SelectItem value="Easy">Easy</SelectItem>
+              <SelectItem value="Medium">Medium</SelectItem>
+              <SelectItem value="Hard">Hard</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select
+            value={sortBy}
+            onValueChange={setSortBy}
+          >
+            <SelectTrigger className="h-9 w-[100px]">
+              <SelectValue placeholder="Sort" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="latest">Latest</SelectItem>
+              <SelectItem value="oldest">Oldest</SelectItem>
+              <SelectItem value="a-z">A-Z</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+        <Input
+          placeholder="Search problems..."
+          className="pl-10"
+          value={searchTerm}
+          onChange={(e) => onSearch(e.target.value)}
+        />
+      </div>
+
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          {filteredProblems.length > 0 ? (
+            filteredProblems.map((problem) => (
+              <div
+                key={problem.id}
+                className="border-b border-slate-200 p-4 hover:bg-slate-50 cursor-pointer"
+                onClick={() => handleProblemClick(problem.id)}
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium">{problem.title}</h3>
+                    <div className="text-sm text-slate-500 mt-1 flex flex-wrap gap-1.5">
+                      {problem.patterns.slice(0, 2).map((pattern, index) => (
+                        <span key={index} className="bg-slate-100 text-slate-700 rounded-full px-2 py-0.5">
+                          {pattern.name}
+                        </span>
+                      ))}
+                      {problem.patterns.length > 2 && (
+                        <span className="bg-slate-100 text-slate-700 rounded-full px-2 py-0.5">
+                          +{problem.patterns.length - 2}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded ${getDifficultyColor(problem.difficulty)}`}>
+                    {problem.difficulty}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-6 text-center">
+              <p className="text-slate-500 mb-4">No problems found matching your criteria.</p>
+              <button
+                className="text-primary-600 hover:text-primary-700 font-medium"
+                onClick={onAddNew}
+              >
+                Add your first problem
+              </button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
