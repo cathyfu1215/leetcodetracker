@@ -111,19 +111,19 @@ export default function ProblemDetail() {
       />
       
       <div className="lg:flex lg:space-x-6">
-        <div className="lg:w-2/3 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="border-b border-slate-200 p-6">
+        <div className="lg:w-2/3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div className="border-b border-slate-200 dark:border-slate-700 p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <span className={`text-xs font-medium px-2 py-0.5 rounded ${getDifficultyColor(problem.difficulty)}`}>
                   {problem.difficulty}
                 </span>
-                <h2 className="text-2xl font-semibold mt-2">{problem.title}</h2>
+                <h2 className="text-2xl font-semibold mt-2 text-slate-800 dark:text-slate-100">{problem.title}</h2>
                 <a 
                   href={problem.url} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="text-primary-600 hover:text-primary-700 text-sm flex items-center mt-1"
+                  className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 text-sm flex items-center mt-1"
                 >
                   <ExternalLink className="mr-1.5 h-3 w-3" />
                   View on LeetCode
@@ -207,12 +207,12 @@ export default function ProblemDetail() {
                   
                   <h3 className="text-lg font-medium mt-4 mb-2">Examples:</h3>
                   {problem.examples.map((example, index) => (
-                    <div key={index} className="bg-slate-50 p-4 rounded-lg mb-4">
-                      <p className="font-medium">Example {index + 1}:</p>
-                      <p><strong>Input:</strong> {example.input}</p>
-                      <p><strong>Output:</strong> {example.output}</p>
+                    <div key={index} className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg mb-4">
+                      <p className="font-medium dark:text-slate-200">Example {index + 1}:</p>
+                      <p className="dark:text-slate-300"><strong className="dark:text-slate-200">Input:</strong> {example.input}</p>
+                      <p className="dark:text-slate-300"><strong className="dark:text-slate-200">Output:</strong> {example.output}</p>
                       {example.explanation && (
-                        <p><strong>Explanation:</strong> {example.explanation}</p>
+                        <p className="dark:text-slate-300"><strong className="dark:text-slate-200">Explanation:</strong> {example.explanation}</p>
                       )}
                     </div>
                   ))}
@@ -222,23 +222,23 @@ export default function ProblemDetail() {
               <TabsContent value="patterns" className="pt-4">
                 <div className="space-y-6">
                   {problem.patterns.map((pattern, index) => (
-                    <div key={index} className="border border-slate-200 rounded-lg p-4">
-                      <h3 className="text-lg font-medium mb-2">{pattern.name}</h3>
-                      <p className="text-slate-700">{pattern.description}</p>
+                    <div key={index} className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 dark:bg-slate-800">
+                      <h3 className="text-lg font-medium mb-2 dark:text-slate-200">{pattern.name}</h3>
+                      <p className="text-slate-700 dark:text-slate-300">{pattern.description}</p>
                     </div>
                   ))}
                   
                   {problem.patterns.length === 0 && (
-                    <p className="text-slate-500 italic">No patterns added yet.</p>
+                    <p className="text-slate-500 dark:text-slate-400 italic">No patterns added yet.</p>
                   )}
                 </div>
                 
-                <h3 className="text-lg font-medium mt-6 mb-2">Tricks</h3>
+                <h3 className="text-lg font-medium mt-6 mb-2 dark:text-slate-200">Tricks</h3>
                 <div className="space-y-4">
                   {problem.tricks.map((trick, index) => (
-                    <div key={index} className="border border-slate-200 rounded-lg p-4">
-                      <h4 className="font-medium mb-1">{trick.name}</h4>
-                      <p className="text-slate-700 text-sm">{trick.description}</p>
+                    <div key={index} className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 dark:bg-slate-800">
+                      <h4 className="font-medium mb-1 dark:text-slate-200">{trick.name}</h4>
+                      <p className="text-slate-700 dark:text-slate-300 text-sm">{trick.description}</p>
                     </div>
                   ))}
                   

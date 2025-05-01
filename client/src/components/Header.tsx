@@ -26,14 +26,14 @@ export default function Header() {
           <h1 className="text-xl font-semibold text-slate-800 dark:text-slate-100">LeetTracker</h1>
         </div>
         
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-4">
           <ThemeToggle />
           <Button 
             onClick={() => setIsAddFormOpen(true)}
-            className="bg-primary-600 hover:bg-primary-700 text-white flex items-center"
+            className="bg-green-600 hover:bg-green-700 text-white font-bold flex items-center shadow-md px-6 transition-all hover:scale-105"
             size="lg"
           >
-            <Plus className="mr-1.5 h-4 w-4" />
+            <Plus className="mr-1.5 h-5 w-5" />
             Add Problem
           </Button>
         </div>
