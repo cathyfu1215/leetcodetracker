@@ -160,18 +160,16 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
           {filteredProblems.length > 0 ? (
             filteredProblems.map((problem) => (
               <div
-                key={problem.id}
+                key={problem.leetcodeNumber} // Use leetcodeNumber as the unique key
                 className="border-b border-slate-200 dark:border-slate-700 p-4 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
-                onClick={() => handleProblemClick(problem.id)}
+                onClick={() => handleProblemClick(problem.leetcodeNumber)}
               >
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-medium dark:text-slate-200">
-                      {extractProblemNumber(problem.url) && (
-                        <span className="text-primary-600 dark:text-primary-400 mr-2">
-                          #{extractProblemNumber(problem.url)}
-                        </span>
-                      )}
+                      <span className="text-primary-600 dark:text-primary-400 mr-2">
+                        #{problem.leetcodeNumber}
+                      </span>
                       {problem.title}
                     </h3>
                     <div className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap gap-1.5">

@@ -33,10 +33,9 @@ export const userSchema = z.object({
 // Insert user schema
 export const insertUserSchema = userSchema.omit({ id: true });
 
-// Define the problem schema
+// Removed the `id` field from the problem schema and updated the `leetcodeNumber` to serve as the unique identifier
 export const problemSchema = z.object({
-  id: z.number(),
-  leetcodeNumber: z.number().int().positive(),  // Added leetcodeNumber field
+  leetcodeNumber: z.number().int().positive(),  // Use leetcodeNumber as the unique identifier
   title: z.string(),
   url: z.string(),
   content: z.string(),
@@ -50,9 +49,8 @@ export const problemSchema = z.object({
   updatedAt: z.string(),
 });
 
-// Define the insert schema for the problems table
+// Updated the insert schema for the problems table
 export const insertProblemSchema = problemSchema.omit({ 
-  id: true,
   createdAt: true,
   updatedAt: true
 });

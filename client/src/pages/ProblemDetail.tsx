@@ -118,7 +118,9 @@ export default function ProblemDetail() {
                 <span className={`text-xs font-medium px-2 py-0.5 rounded ${getDifficultyColor(problem.difficulty)}`}>
                   {problem.difficulty}
                 </span>
-                <h2 className="text-2xl font-semibold mt-2 text-slate-800 dark:text-slate-100">{problem.title}</h2>
+                <h2 className="text-2xl font-semibold mt-2 text-slate-800 dark:text-slate-100">
+                  #{problem.leetcodeNumber}: {problem.title}
+                </h2>
                 <a 
                   href={problem.url} 
                   target="_blank" 

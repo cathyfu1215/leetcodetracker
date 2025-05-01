@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { X, Plus } from "lucide-react";
+import { X, Plus, CheckCircle, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
@@ -55,8 +55,9 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
   const [tab, setTab] = useState("basic");
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [leetcodeNumberStatus, setLeetcodeNumberStatus] = useState<"valid" | "invalid" | "checking" | null>(null);
 
-  // Initialize the form with defaults or provided problem
+  // Update the default values for constraints and examples to be empty arrays
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: problem ? {
@@ -64,8 +65,8 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
       url: problem.url || "",
       leetcodeNumber: problem.leetcodeNumber || 1,
       content: problem.content || "",
-      constraints: problem.constraints || [],
-      examples: problem.examples || [],
+      constraints: problem.constraints || [], // Ensure empty array for constraints
+      examples: problem.examples || [], // Ensure empty array for examples
       patterns: problem.patterns || [],
       tricks: problem.tricks || [],
       notes: problem.notes || "",
@@ -73,16 +74,39 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
     } : {
       title: "",
       url: "",
-      leetcodeNumber: 1,
+      leetcodeNumber: undefined, // Ensure blank by default
       content: "",
-      constraints: [],
-      examples: [],
+      constraints: [], // Default to empty array
+      examples: [], // Default to empty array
       patterns: [],
       tricks: [],
       notes: "",
       difficulty: "Medium"
     }
   });
+
+  const checkLeetcodeNumber = async (number: number) => {
+    setLeetcodeNumberStatus("checking");
+    try {
+      const response = await apiRequest("GET", `/api/problems/${number}`);
+      if (response.ok) {
+        setLeetcodeNumberStatus("invalid");
+      } else {
+        setLeetcodeNumberStatus("valid");
+      }
+    } catch {
+      setLeetcodeNumberStatus("valid");
+    }
+  };
+
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "leetcodeNumber" && value.leetcodeNumber) {
+        checkLeetcodeNumber(value.leetcodeNumber);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   // Set up field arrays for repeating elements
   const { 
@@ -125,22 +149,22 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
   // Add mutation for creating/updating problems
   const mutation = useMutation({
     mutationFn: async (data: FormValues) => {
-      // Add timestamps for server processing
+      // Use leetcodeNumber as the unique identifier
       const payload = {
         ...data,
         updatedAt: new Date().toISOString(),
         createdAt: mode === "add" ? new Date().toISOString() : problem?.createdAt
       };
-      
+
       if (mode === "add") {
         return apiRequest("POST", "/api/problems", payload);
       } else {
-        return apiRequest("PATCH", `/api/problems/${problem!.id}`, payload);
+        return apiRequest("PATCH", `/api/problems/${problem!.leetcodeNumber}`, payload);
       }
     },
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ['/api/problems'] });
-      
+
       if (mode === "add") {
         response.json().then(newProblem => {
           toast({
@@ -148,7 +172,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
             description: "Your problem has been successfully added.",
           });
           onClose();
-          setLocation(`/problems/${newProblem.id}`);
+          setLocation(`/problems/${newProblem.leetcodeNumber}`);
         });
       } else {
         toast({
@@ -157,7 +181,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
         });
         onClose();
         // Invalidate the specific problem query
-        queryClient.invalidateQueries({ queryKey: ['/api/problems', problem!.id] });
+        queryClient.invalidateQueries({ queryKey: ['/api/problems', problem!.leetcodeNumber] });
       }
     },
     onError: (error) => {
@@ -202,7 +226,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                     <FormItem>
                       <FormLabel>Problem Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="Two Sum" {...field} />
+                        <Input placeholder="" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -216,16 +240,30 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                     <FormItem>
                       <FormLabel>LeetCode Number</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="1" 
-                          {...field} 
-                          onChange={(e) => {
-                            const value = parseInt(e.target.value);
-                            field.onChange(isNaN(value) ? 1 : value);
-                          }}
-                        />
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            placeholder=""
+                            {...field}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value);
+                              field.onChange(isNaN(value) ? undefined : value);
+                            }}
+                            className="appearance-none"
+                          />
+                          {leetcodeNumberStatus === "valid" && (
+                            <CheckCircle className="absolute right-2 top-2 text-green-500" />
+                          )}
+                          {leetcodeNumberStatus === "invalid" && (
+                            <XCircle className="absolute right-2 top-2 text-red-500" />
+                          )}
+                        </div>
                       </FormControl>
+                      {leetcodeNumberStatus === "invalid" && (
+                        <FormMessage>
+                          We have this problem, do you want to modify it?
+                        </FormMessage>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}

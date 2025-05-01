@@ -93,55 +93,43 @@ export class FirebaseStorage implements IStorage {
     if (existingProblem) {
       throw new Error(`Problem with Leetcode number ${insertProblem.leetcodeNumber} already exists`);
     }
-    
-    // Get the next ID by counting documents (not ideal for production)
-    const countSnapshot = await db.collection(PROBLEMS_COLLECTION).get();
-    const id = countSnapshot.size + 1;
-    
+
     const now = new Date().toISOString();
     const problem: Problem = { 
       ...insertProblem, 
-      id,
       createdAt: now,
       updatedAt: now
     };
-    
-    await db.collection(PROBLEMS_COLLECTION).doc(id.toString()).set(problem);
+
+    // Use leetcodeNumber as the document ID
+    await db.collection(PROBLEMS_COLLECTION).doc(insertProblem.leetcodeNumber.toString()).set(problem);
     return problem;
   }
 
-  async updateProblem(id: number, updateData: Partial<InsertProblem>): Promise<Problem | undefined> {
-    const problemRef = db.collection(PROBLEMS_COLLECTION).doc(id.toString());
+  async updateProblem(leetcodeNumber: number, updateData: Partial<InsertProblem>): Promise<Problem | undefined> {
+    const problemRef = db.collection(PROBLEMS_COLLECTION).doc(leetcodeNumber.toString());
     const problemDoc = await problemRef.get();
-    
+
     if (!problemDoc.exists) return undefined;
-    
-    // If updating leetcodeNumber, check if it's unique
-    if (updateData.leetcodeNumber !== undefined) {
-      const existingProblem = await this.getProblemByLeetcodeNumber(updateData.leetcodeNumber);
-      if (existingProblem && existingProblem.id !== id) {
-        throw new Error(`Problem with Leetcode number ${updateData.leetcodeNumber} already exists`);
-      }
-    }
-    
+
     const updatedData = {
       ...updateData,
       updatedAt: new Date().toISOString()
     };
-    
+
     await problemRef.update(updatedData);
-    
+
     // Get the updated document
     const updatedDoc = await problemRef.get();
-    return { id, ...updatedDoc.data() } as Problem;
+    return { leetcodeNumber, ...updatedDoc.data() } as Problem;
   }
 
-  async deleteProblem(id: number): Promise<boolean> {
-    const problemRef = db.collection(PROBLEMS_COLLECTION).doc(id.toString());
+  async deleteProblem(leetcodeNumber: number): Promise<boolean> {
+    const problemRef = db.collection(PROBLEMS_COLLECTION).doc(leetcodeNumber.toString());
     const problemDoc = await problemRef.get();
-    
+
     if (!problemDoc.exists) return false;
-    
+
     await problemRef.delete();
     return true;
   }

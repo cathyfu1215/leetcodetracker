@@ -58,16 +58,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update an existing problem
-  app.patch("/api/problems/:id", async (req: Request, res: Response) => {
+  app.patch("/api/problems/:leetcodeNumber", async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid problem ID" });
+      const leetcodeNumber = parseInt(req.params.leetcodeNumber);
+      if (isNaN(leetcodeNumber)) {
+        return res.status(400).json({ message: "Invalid problem Leetcode number" });
       }
 
       // Validate the update data
       const validatedData = insertProblemSchema.partial().safeParse(req.body);
-      
+
       if (!validatedData.success) {
         const validationError = fromZodError(validatedData.error);
         return res.status(400).json({ 
@@ -76,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const updatedProblem = await storage.updateProblem(id, validatedData.data);
+      const updatedProblem = await storage.updateProblem(leetcodeNumber, validatedData.data);
       if (!updatedProblem) {
         return res.status(404).json({ message: "Problem not found" });
       }
@@ -89,14 +89,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete a problem
-  app.delete("/api/problems/:id", async (req: Request, res: Response) => {
+  app.delete("/api/problems/:leetcodeNumber", async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid problem ID" });
+      const leetcodeNumber = parseInt(req.params.leetcodeNumber);
+      if (isNaN(leetcodeNumber)) {
+        return res.status(400).json({ message: "Invalid problem Leetcode number" });
       }
 
-      const deleted = await storage.deleteProblem(id);
+      const deleted = await storage.deleteProblem(leetcodeNumber);
       if (!deleted) {
         return res.status(404).json({ message: "Problem not found" });
       }
