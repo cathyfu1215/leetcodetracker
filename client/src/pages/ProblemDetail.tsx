@@ -187,6 +187,12 @@ export default function ProblemDetail() {
                   Patterns
                 </TabsTrigger>
                 <TabsTrigger 
+                  value="tricks" 
+                  className="data-[state=active]:border-b-2 data-[state=active]:border-primary-600 data-[state=active]:text-primary-600 rounded-none border-b-2 border-transparent px-4 pb-2"
+                >
+                  Tricks
+                </TabsTrigger>
+                <TabsTrigger 
                   value="notes" 
                   className="data-[state=active]:border-b-2 data-[state=active]:border-primary-600 data-[state=active]:text-primary-600 rounded-none border-b-2 border-transparent px-4 pb-2"
                 >
@@ -232,18 +238,19 @@ export default function ProblemDetail() {
                     <p className="text-slate-500 dark:text-slate-400 italic">No patterns added yet.</p>
                   )}
                 </div>
-                
-                <h3 className="text-lg font-medium mt-6 mb-2 dark:text-slate-200">Tricks</h3>
+              </TabsContent>
+              
+              <TabsContent value="tricks" className="pt-4">
                 <div className="space-y-4">
                   {problem.tricks?.map((trick, index) => (
                     <div key={index} className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 dark:bg-slate-800">
-                      <h4 className="font-medium mb-1 dark:text-slate-200">{trick.name}</h4>
-                      <p className="text-slate-700 dark:text-slate-300 text-sm">{trick.description}</p>
+                      <h3 className="text-lg font-medium mb-2 dark:text-slate-200">{trick.name}</h3>
+                      <p className="text-slate-700 dark:text-slate-300">{trick.description}</p>
                     </div>
                   ))}
                   
                   {(!problem.tricks || problem.tricks.length === 0) && (
-                    <p className="text-slate-500 italic">No tricks added yet.</p>
+                    <p className="text-slate-500 dark:text-slate-400 italic">No tricks added yet.</p>
                   )}
                 </div>
               </TabsContent>
