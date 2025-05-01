@@ -30,6 +30,9 @@ interface ProblemFormProps {
   mode: "add" | "edit";
 }
 
+// Define the type explicitly to avoid type inference issues
+type FormValues = z.infer<typeof insertProblemSchema>;
+
 // Form validation schema based on our data model
 const formSchema = insertProblemSchema
   .extend({
@@ -54,32 +57,30 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
   const [, setLocation] = useLocation();
 
   // Initialize the form with defaults or provided problem
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: problem ? {
       title: problem.title || "",
       url: problem.url || "",
+      leetcodeNumber: problem.leetcodeNumber || 1,
       content: problem.content || "",
       constraints: problem.constraints || [],
       examples: problem.examples || [],
       patterns: problem.patterns || [],
       tricks: problem.tricks || [],
       notes: problem.notes || "",
-      difficulty: problem.difficulty || "Medium",
-      createdAt: problem.createdAt || new Date().toISOString(),
-      updatedAt: problem.updatedAt || new Date().toISOString()
+      difficulty: problem.difficulty || "Medium"
     } : {
       title: "",
       url: "",
+      leetcodeNumber: 1,
       content: "",
       constraints: [],
       examples: [],
       patterns: [],
       tricks: [],
       notes: "",
-      difficulty: "Medium",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      difficulty: "Medium"
     }
   });
 
@@ -90,7 +91,8 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
     remove: removeConstraint 
   } = useFieldArray({
     control: form.control,
-    name: "constraints"
+    // Using a type assertion to satisfy TypeScript
+    name: "constraints" as any
   });
 
   const { 
@@ -99,7 +101,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
     remove: removeExample 
   } = useFieldArray({
     control: form.control,
-    name: "examples"
+    name: "examples" as const
   });
 
   const { 
@@ -108,7 +110,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
     remove: removePattern 
   } = useFieldArray({
     control: form.control,
-    name: "patterns"
+    name: "patterns" as const
   });
 
   const { 
@@ -117,16 +119,23 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
     remove: removeTrick 
   } = useFieldArray({
     control: form.control,
-    name: "tricks"
+    name: "tricks" as const
   });
 
   // Add mutation for creating/updating problems
   const mutation = useMutation({
-    mutationFn: async (data: z.infer<typeof formSchema>) => {
+    mutationFn: async (data: FormValues) => {
+      // Add timestamps for server processing
+      const payload = {
+        ...data,
+        updatedAt: new Date().toISOString(),
+        createdAt: mode === "add" ? new Date().toISOString() : problem?.createdAt
+      };
+      
       if (mode === "add") {
-        return apiRequest("POST", "/api/problems", data);
+        return apiRequest("POST", "/api/problems", payload);
       } else {
-        return apiRequest("PATCH", `/api/problems/${problem!.id}`, data);
+        return apiRequest("PATCH", `/api/problems/${problem!.id}`, payload);
       }
     },
     onSuccess: (response) => {
@@ -160,13 +169,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
     },
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    // Update timestamps
-    data.updatedAt = new Date().toISOString();
-    if (mode === "add") {
-      data.createdAt = new Date().toISOString();
-    }
-    
+  const onSubmit = (data: FormValues) => {
     mutation.mutate(data);
   };
 
@@ -208,18 +211,40 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                 
                 <FormField
                   control={form.control}
-                  name="url"
+                  name="leetcodeNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>LeetCode URL</FormLabel>
+                      <FormLabel>LeetCode Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://leetcode.com/problems/..." {...field} />
+                        <Input 
+                          type="number" 
+                          placeholder="1" 
+                          {...field} 
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value);
+                            field.onChange(isNaN(value) ? 1 : value);
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>LeetCode URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://leetcode.com/problems/..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
@@ -286,7 +311,8 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                     variant="link"
                     size="sm"
                     className="h-auto p-0 text-primary"
-                    onClick={() => appendConstraint("")}
+                    // Using a more compatible approach for appending
+                    onClick={() => appendConstraint("New constraint" as any)}
                   >
                     <Plus className="h-4 w-4 mr-1" /> Add Constraint
                   </Button>
@@ -554,6 +580,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                         placeholder="Add any additional notes here. Markdown is supported." 
                         className="min-h-[100px]"
                         {...field} 
+                        value={field.value || ""}
                       />
                     </FormControl>
                     <FormMessage />

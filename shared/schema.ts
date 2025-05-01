@@ -1,5 +1,3 @@
-import { pgTable, text, serial, integer, jsonb } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Define the pattern schema
@@ -25,49 +23,42 @@ export const exampleSchema = z.object({
 export const difficultyEnum = z.enum(["Easy", "Medium", "Hard"]);
 export type Difficulty = z.infer<typeof difficultyEnum>;
 
-// Define the users table
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+// Define the user schema
+export const userSchema = z.object({
+  id: z.number(),
+  username: z.string(),
+  password: z.string(),
 });
-
-// Define the problems table
-export const problems = pgTable("problems", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  url: text("url").notNull(),
-  content: text("content").notNull(),
-  constraints: jsonb("constraints").notNull().$type<string[]>(),
-  examples: jsonb("examples").notNull().$type<z.infer<typeof exampleSchema>[]>(),
-  patterns: jsonb("patterns").notNull().$type<z.infer<typeof patternSchema>[]>(),
-  tricks: jsonb("tricks").notNull().$type<z.infer<typeof trickSchema>[]>(),
-  notes: text("notes"),
-  difficulty: text("difficulty").notNull(),
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull(),
-});
-
-// Define the insert schema for the problems table using drizzle-zod
-export const insertProblemSchema = createInsertSchema(problems)
-  .omit({ id: true })
-  .extend({
-    constraints: z.array(z.string()),
-    examples: z.array(exampleSchema),
-    patterns: z.array(patternSchema),
-    tricks: z.array(trickSchema),
-    difficulty: difficultyEnum,
-  });
-
-// Define the problem type
-export type Problem = typeof problems.$inferSelect;
-export type InsertProblem = z.infer<typeof insertProblemSchema>;
 
 // Insert user schema
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertUserSchema = userSchema.omit({ id: true });
+
+// Define the problem schema
+export const problemSchema = z.object({
+  id: z.number(),
+  leetcodeNumber: z.number().int().positive(),  // Added leetcodeNumber field
+  title: z.string(),
+  url: z.string(),
+  content: z.string(),
+  constraints: z.array(z.string()),
+  examples: z.array(exampleSchema),
+  patterns: z.array(patternSchema),
+  tricks: z.array(trickSchema),
+  notes: z.string().nullable().optional(),
+  difficulty: difficultyEnum,
+  createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
+// Define the insert schema for the problems table
+export const insertProblemSchema = problemSchema.omit({ 
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// Define types for use in the application
+export type Problem = z.infer<typeof problemSchema>;
+export type InsertProblem = z.infer<typeof insertProblemSchema>;
+export type User = z.infer<typeof userSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;

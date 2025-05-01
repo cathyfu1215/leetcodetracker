@@ -1,7 +1,10 @@
-import { problems, type Problem, type InsertProblem, users, type User, type InsertUser } from "@shared/schema";
+import { db } from './firebase';
+import { Problem, type InsertProblem, type User, type InsertUser } from "@shared/schema";
 
-// modify the interface with any CRUD methods
-// you might need
+// Firebase Collection Names
+const USERS_COLLECTION = 'users';
+const PROBLEMS_COLLECTION = 'problems';
+
 export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
@@ -11,53 +14,90 @@ export interface IStorage {
   // Problem methods
   getAllProblems(): Promise<Problem[]>;
   getProblem(id: number): Promise<Problem | undefined>;
+  getProblemByLeetcodeNumber(leetcodeNumber: number): Promise<Problem | undefined>; // New method
   createProblem(problem: InsertProblem): Promise<Problem>;
   updateProblem(id: number, problem: Partial<InsertProblem>): Promise<Problem | undefined>;
   deleteProblem(id: number): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private problems: Map<number, Problem>;
-  private userCurrentId: number;
-  private problemCurrentId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.problems = new Map();
-    this.userCurrentId = 1;
-    this.problemCurrentId = 1;
-  }
-
+export class FirebaseStorage implements IStorage {
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const userDoc = await db.collection(USERS_COLLECTION).doc(id.toString()).get();
+    if (!userDoc.exists) return undefined;
+    return { id, ...userDoc.data() } as User;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const querySnapshot = await db.collection(USERS_COLLECTION)
+      .where('username', '==', username)
+      .limit(1)
+      .get();
+    
+    if (querySnapshot.empty) return undefined;
+    
+    const userDoc = querySnapshot.docs[0];
+    return {
+      id: parseInt(userDoc.id),
+      ...userDoc.data()
+    } as User;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userCurrentId++;
+    // Get the next ID by counting documents (not ideal for production)
+    const countSnapshot = await db.collection(USERS_COLLECTION).get();
+    const id = countSnapshot.size + 1;
+    
     const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    
+    await db.collection(USERS_COLLECTION).doc(id.toString()).set(user);
     return user;
   }
 
   // Problem methods
   async getAllProblems(): Promise<Problem[]> {
-    return Array.from(this.problems.values());
+    const querySnapshot = await db.collection(PROBLEMS_COLLECTION).get();
+    return querySnapshot.docs.map(doc => {
+      return {
+        id: parseInt(doc.id),
+        ...doc.data()
+      } as Problem;
+    });
   }
 
   async getProblem(id: number): Promise<Problem | undefined> {
-    return this.problems.get(id);
+    const problemDoc = await db.collection(PROBLEMS_COLLECTION).doc(id.toString()).get();
+    if (!problemDoc.exists) return undefined;
+    return { id, ...problemDoc.data() } as Problem;
+  }
+
+  // New method to get problem by leetcode number
+  async getProblemByLeetcodeNumber(leetcodeNumber: number): Promise<Problem | undefined> {
+    const querySnapshot = await db.collection(PROBLEMS_COLLECTION)
+      .where('leetcodeNumber', '==', leetcodeNumber)
+      .limit(1)
+      .get();
+    
+    if (querySnapshot.empty) return undefined;
+    
+    const problemDoc = querySnapshot.docs[0];
+    return {
+      id: parseInt(problemDoc.id),
+      ...problemDoc.data()
+    } as Problem;
   }
 
   async createProblem(insertProblem: InsertProblem): Promise<Problem> {
-    const id = this.problemCurrentId++;
+    // Check if problem with the same leetcode number already exists
+    const existingProblem = await this.getProblemByLeetcodeNumber(insertProblem.leetcodeNumber);
+    if (existingProblem) {
+      throw new Error(`Problem with Leetcode number ${insertProblem.leetcodeNumber} already exists`);
+    }
+    
+    // Get the next ID by counting documents (not ideal for production)
+    const countSnapshot = await db.collection(PROBLEMS_COLLECTION).get();
+    const id = countSnapshot.size + 1;
+    
     const now = new Date().toISOString();
     const problem: Problem = { 
       ...insertProblem, 
@@ -65,29 +105,47 @@ export class MemStorage implements IStorage {
       createdAt: now,
       updatedAt: now
     };
-    this.problems.set(id, problem);
+    
+    await db.collection(PROBLEMS_COLLECTION).doc(id.toString()).set(problem);
     return problem;
   }
 
   async updateProblem(id: number, updateData: Partial<InsertProblem>): Promise<Problem | undefined> {
-    const existingProblem = this.problems.get(id);
-    if (!existingProblem) {
-      return undefined;
+    const problemRef = db.collection(PROBLEMS_COLLECTION).doc(id.toString());
+    const problemDoc = await problemRef.get();
+    
+    if (!problemDoc.exists) return undefined;
+    
+    // If updating leetcodeNumber, check if it's unique
+    if (updateData.leetcodeNumber !== undefined) {
+      const existingProblem = await this.getProblemByLeetcodeNumber(updateData.leetcodeNumber);
+      if (existingProblem && existingProblem.id !== id) {
+        throw new Error(`Problem with Leetcode number ${updateData.leetcodeNumber} already exists`);
+      }
     }
-
-    const updatedProblem: Problem = {
-      ...existingProblem,
+    
+    const updatedData = {
       ...updateData,
       updatedAt: new Date().toISOString()
     };
     
-    this.problems.set(id, updatedProblem);
-    return updatedProblem;
+    await problemRef.update(updatedData);
+    
+    // Get the updated document
+    const updatedDoc = await problemRef.get();
+    return { id, ...updatedDoc.data() } as Problem;
   }
 
   async deleteProblem(id: number): Promise<boolean> {
-    return this.problems.delete(id);
+    const problemRef = db.collection(PROBLEMS_COLLECTION).doc(id.toString());
+    const problemDoc = await problemRef.get();
+    
+    if (!problemDoc.exists) return false;
+    
+    await problemRef.delete();
+    return true;
   }
 }
 
-export const storage = new MemStorage();
+// Export a singleton instance for use throughout the application
+export const storage = new FirebaseStorage();
