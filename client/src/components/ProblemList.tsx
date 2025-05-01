@@ -71,7 +71,7 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
   return (
     <div className="lg:w-1/3 mb-6 lg:mb-0">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-slate-800">
+        <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
           Problems ({filteredProblems.length})
         </h2>
         
@@ -117,26 +117,26 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
         />
       </div>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden dark:bg-slate-900 dark:border-slate-700">
         <CardContent className="p-0">
           {filteredProblems.length > 0 ? (
             filteredProblems.map((problem) => (
               <div
                 key={problem.id}
-                className="border-b border-slate-200 p-4 hover:bg-slate-50 cursor-pointer"
+                className="border-b border-slate-200 dark:border-slate-700 p-4 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
                 onClick={() => handleProblemClick(problem.id)}
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-medium">{problem.title}</h3>
-                    <div className="text-sm text-slate-500 mt-1 flex flex-wrap gap-1.5">
+                    <h3 className="font-medium dark:text-slate-200">{problem.title}</h3>
+                    <div className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap gap-1.5">
                       {problem.patterns.slice(0, 2).map((pattern, index) => (
-                        <span key={index} className="bg-slate-100 text-slate-700 rounded-full px-2 py-0.5">
+                        <span key={index} className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full px-2 py-0.5">
                           {pattern.name}
                         </span>
                       ))}
                       {problem.patterns.length > 2 && (
-                        <span className="bg-slate-100 text-slate-700 rounded-full px-2 py-0.5">
+                        <span className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full px-2 py-0.5">
                           +{problem.patterns.length - 2}
                         </span>
                       )}
@@ -150,9 +150,9 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
             ))
           ) : (
             <div className="p-6 text-center">
-              <p className="text-slate-500 mb-4">No problems found matching your criteria.</p>
+              <p className="text-slate-500 dark:text-slate-400 mb-4">No problems found matching your criteria.</p>
               <button
-                className="text-primary-600 hover:text-primary-700 font-medium"
+                className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
                 onClick={onAddNew}
               >
                 Add your first problem
