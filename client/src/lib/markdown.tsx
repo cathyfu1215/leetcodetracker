@@ -1,4 +1,9 @@
-export function renderMarkdown(markdown: string): React.ReactNode {
+export function renderMarkdown(markdown: string | null | undefined): React.ReactNode {
+  // Return an empty div if markdown is null or undefined
+  if (!markdown) {
+    return <div></div>;
+  }
+  
   // Use a simple regex-based renderer for now
   // In a production app, you would use a proper markdown library like marked or react-markdown
   

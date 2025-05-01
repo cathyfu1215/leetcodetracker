@@ -157,7 +157,7 @@ export default function ProblemDetail() {
                 <Puzzle className="text-slate-400 mr-2 h-4 w-4" />
                 <span>
                   <span className="text-slate-500">Patterns: </span>
-                  <span>{problem.patterns.map(p => p.name).join(", ")}</span>
+                  <span>{problem.patterns?.map(p => p.name).join(", ") || "None"}</span>
                 </span>
               </div>
               
@@ -165,7 +165,7 @@ export default function ProblemDetail() {
                 <Lightbulb className="text-slate-400 mr-2 h-4 w-4" />
                 <span>
                   <span className="text-slate-500">Tricks: </span>
-                  <span>{problem.tricks.length}</span>
+                  <span>{problem.tricks?.length || 0}</span>
                 </span>
               </div>
             </div>
@@ -196,17 +196,17 @@ export default function ProblemDetail() {
               
               <TabsContent value="problem" className="pt-4">
                 <div className="prose max-w-none">
-                  {renderMarkdown(problem.content)}
+                  {problem.content ? renderMarkdown(problem.content) : <p>No content available.</p>}
                   
                   <h3 className="text-lg font-medium mt-4 mb-2">Constraints:</h3>
                   <ul className="list-disc pl-5 space-y-1">
-                    {problem.constraints.map((constraint, index) => (
+                    {problem.constraints?.map((constraint, index) => (
                       <li key={index}>{constraint}</li>
                     ))}
                   </ul>
                   
                   <h3 className="text-lg font-medium mt-4 mb-2">Examples:</h3>
-                  {problem.examples.map((example, index) => (
+                  {problem.examples?.map((example, index) => (
                     <div key={index} className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg mb-4">
                       <p className="font-medium dark:text-slate-200">Example {index + 1}:</p>
                       <p className="dark:text-slate-300"><strong className="dark:text-slate-200">Input:</strong> {example.input}</p>
@@ -221,28 +221,28 @@ export default function ProblemDetail() {
               
               <TabsContent value="patterns" className="pt-4">
                 <div className="space-y-6">
-                  {problem.patterns.map((pattern, index) => (
+                  {problem.patterns?.map((pattern, index) => (
                     <div key={index} className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 dark:bg-slate-800">
                       <h3 className="text-lg font-medium mb-2 dark:text-slate-200">{pattern.name}</h3>
                       <p className="text-slate-700 dark:text-slate-300">{pattern.description}</p>
                     </div>
                   ))}
                   
-                  {problem.patterns.length === 0 && (
+                  {(!problem.patterns || problem.patterns.length === 0) && (
                     <p className="text-slate-500 dark:text-slate-400 italic">No patterns added yet.</p>
                   )}
                 </div>
                 
                 <h3 className="text-lg font-medium mt-6 mb-2 dark:text-slate-200">Tricks</h3>
                 <div className="space-y-4">
-                  {problem.tricks.map((trick, index) => (
+                  {problem.tricks?.map((trick, index) => (
                     <div key={index} className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 dark:bg-slate-800">
                       <h4 className="font-medium mb-1 dark:text-slate-200">{trick.name}</h4>
                       <p className="text-slate-700 dark:text-slate-300 text-sm">{trick.description}</p>
                     </div>
                   ))}
                   
-                  {problem.tricks.length === 0 && (
+                  {(!problem.tricks || problem.tricks.length === 0) && (
                     <p className="text-slate-500 italic">No tricks added yet.</p>
                   )}
                 </div>
