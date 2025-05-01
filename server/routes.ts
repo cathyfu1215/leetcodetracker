@@ -24,7 +24,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid problem ID" });
       }
 
+      console.log("Fetching problem by ID:", id);
+
       const problem = await storage.getProblem(id);
+      if (!problem) {
+        return res.status(404).json({ message: "Problem not found" });
+      }
+
+      res.json(problem);
+    } catch (error) {
+      console.error("Error fetching problem:", error);
+      res.status(500).json({ message: "Failed to fetch problem" });
+    }
+  });
+
+  // Get a specific problem by Leetcode number
+  app.get("/api/problems/by-leetcode/:leetcodeNumber", async (req: Request, res: Response) => {
+    try {
+      const leetcodeNumber = parseInt(req.params.leetcodeNumber);
+      if (isNaN(leetcodeNumber)) {
+        return res.status(400).json({ message: "Invalid Leetcode number" });
+      }
+
+      const problem = await storage.getProblemByLeetcodeNumber(leetcodeNumber);
       if (!problem) {
         return res.status(404).json({ message: "Problem not found" });
       }

@@ -23,10 +23,24 @@ export default function ProblemDetail() {
   const { toast } = useToast();
   
   const problemId = params?.id ? parseInt(params.id) : 0;
+  console.log("Problem ID from route:", problemId);
   
   const { data: problem, isLoading, isError } = useQuery<Problem>({
     queryKey: ['/api/problems', problemId],
+    queryFn: async () => {
+      if (!problemId) {
+        throw new Error("Invalid problem ID");
+      }
+      const response = await apiRequest('GET', `/api/problems/${problemId}`);
+      return response.json();
+    },
     enabled: !!problemId,
+    onSuccess: (data) => {
+      console.log("Fetched problem data:", data);
+    },
+    onError: (error) => {
+      console.error("Error fetching problem data:", error);
+    },
   });
   
   const deleteMutation = useMutation({

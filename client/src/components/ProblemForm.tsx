@@ -63,10 +63,10 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
     defaultValues: problem ? {
       title: problem.title || "",
       url: problem.url || "",
-      leetcodeNumber: problem.leetcodeNumber || 1,
+      leetcodeNumber: problem.leetcodeNumber || 0, // Ensure default value is 0
       content: problem.content || "",
-      constraints: problem.constraints || [], // Ensure empty array for constraints
-      examples: problem.examples || [], // Ensure empty array for examples
+      constraints: problem.constraints || [],
+      examples: problem.examples || [],
       patterns: problem.patterns || [],
       tricks: problem.tricks || [],
       notes: problem.notes || "",
@@ -74,10 +74,10 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
     } : {
       title: "",
       url: "",
-      leetcodeNumber: undefined, // Ensure blank by default
+      leetcodeNumber: 0, // Ensure default value is 0
       content: "",
-      constraints: [], // Default to empty array
-      examples: [], // Default to empty array
+      constraints: [],
+      examples: [],
       patterns: [],
       tricks: [],
       notes: "",

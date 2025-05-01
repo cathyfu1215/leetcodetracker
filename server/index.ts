@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express, { type Request, Response, NextFunction } from "express";
+import cors from 'cors';
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 // Import Firebase to ensure it initializes at server startup
@@ -11,6 +12,13 @@ import './firebase';
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Allow CORS for the frontend origin
+app.use(cors({
+  origin: 'http://localhost:5008', // Replace with your frontend's origin if different
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();

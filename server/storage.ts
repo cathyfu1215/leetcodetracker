@@ -56,10 +56,11 @@ export class FirebaseStorage implements IStorage {
 
   // Problem methods
   async getAllProblems(): Promise<Problem[]> {
+    console.log("Fetching all problems from the database");
     const querySnapshot = await db.collection(PROBLEMS_COLLECTION).get();
     return querySnapshot.docs.map(doc => {
       return {
-        id: parseInt(doc.id),
+        leetcodeNumber: parseInt(doc.id), // Use leetcodeNumber as the unique identifier
         ...doc.data()
       } as Problem;
     });
@@ -78,7 +79,10 @@ export class FirebaseStorage implements IStorage {
       .limit(1)
       .get();
     
-    if (querySnapshot.empty) return undefined;
+    if (querySnapshot.empty) {
+      console.log(`Problem with Leetcode number ${leetcodeNumber} not found in the database.`);
+      return undefined;
+    }
     
     const problemDoc = querySnapshot.docs[0];
     return {
