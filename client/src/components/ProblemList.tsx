@@ -107,7 +107,7 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
   };
 
   return (
-    <div className="lg:w-1/3 mb-6 lg:mb-0">
+    <div className="lg:w-[70%] mb-6 lg:mb-0">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
           Problems ({filteredProblems.length})

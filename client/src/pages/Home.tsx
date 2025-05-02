@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ProblemList from "@/components/ProblemList";
+import PatternTrickList from "@/components/PatternTrickList";
 import ProblemForm from "@/components/ProblemForm";
 import { useQuery } from "@tanstack/react-query";
 import { Problem } from "@shared/schema";
@@ -29,9 +30,7 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-
-
-      <div className="lg:flex lg:space-x-6">
+      <div className="flex flex-col lg:flex-row lg:space-x-4">
         {isLoading ? (
           <div className="w-full flex justify-center items-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -41,12 +40,15 @@ export default function Home() {
             <p className="text-red-500">Failed to load problems. Please try again.</p>
           </div>
         ) : (
-          <ProblemList 
-            problems={problems || []} 
-            searchTerm={searchTerm}
-            onAddNew={() => setIsAddFormOpen(true)}
-            onSearch={handleSearchChange}
-          />
+          <>
+            <ProblemList 
+              problems={problems || []} 
+              searchTerm={searchTerm}
+              onAddNew={() => setIsAddFormOpen(true)}
+              onSearch={handleSearchChange}
+            />
+            <PatternTrickList />
+          </>
         )}
       </div>
     </div>
