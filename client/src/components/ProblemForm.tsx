@@ -494,7 +494,11 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
   };
   
   // Helper function to create new trick
-  const handleCreateNewTrick = () => {
+  const handleCreateNewTrick = (e: React.MouseEvent) => {
+    // Prevent event bubbling which might cause the dialog to close immediately
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (trickSearchQuery.trim().length === 0) {
       toast({
         title: "Empty trick name",
@@ -510,7 +514,10 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
   };
   
   // Helper function to submit new trick with description
-  const handleSubmitNewTrick = async () => {
+  const handleSubmitNewTrick = async (e: React.FormEvent) => {
+    // Prevent form submission which might cause page refresh or dialog close
+    e.preventDefault();
+    
     if (!newTrickName.trim()) {
       toast({
         title: "Empty trick name",
