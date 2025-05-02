@@ -173,16 +173,16 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
                       {problem.title}
                     </h3>
                     <div className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap gap-1.5">
-                      {problem.patterns?.slice(0, 2).map((pattern, index) => (
-                        <span key={index} className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full px-2 py-0.5">
+                      {problem.patterns?.map((pattern, index) => (
+                        <span key={`pattern-${index}`} className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 rounded-full px-2 py-0.5 text-xs">
                           {pattern.name}
                         </span>
                       ))}
-                      {problem.patterns && problem.patterns.length > 2 && (
-                        <span className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full px-2 py-0.5">
-                          +{problem.patterns.length - 2}
+                      {problem.tricks?.map((trick, index) => (
+                        <span key={`trick-${index}`} className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-100 rounded-full px-2 py-0.5 text-xs">
+                          {trick.name}
                         </span>
-                      )}
+                      ))}
                     </div>
                   </div>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded ${getDifficultyColor(problem.difficulty)}`}>
