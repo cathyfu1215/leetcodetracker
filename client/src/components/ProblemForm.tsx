@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { X, Plus, CheckCircle, XCircle, Check, ChevronsUpDown } from "lucide-react";
+import { X, Plus, CheckCircle, XCircle, Check, Search, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Problem, insertProblemSchema, patternSchema, trickSchema, exampleSchema, difficultyEnum, PatternReference, TrickReference } from "@shared/schema";
+import { Problem, insertProblemSchema, patternSchema, trickSchema, exampleSchema, difficultyEnum, PatternReference, TrickReference, ProblemReference } from "@shared/schema";
 import { useLocation } from "wouter";
 
 import {
@@ -22,20 +22,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+
+// Define interfaces for Pattern and Trick
+interface Pattern {
+  id?: string;
+  name: string;
+  description: string;
+  usageCount?: number;
+  problems?: ProblemReference[];
+}
+
+interface Trick {
+  id?: string;
+  name: string;
+  description: string; 
+  usageCount?: number;
+  problems?: ProblemReference[];
+}
 
 interface ProblemFormProps {
   problem?: Problem;
@@ -73,12 +78,30 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
   const [confirmedExamples, setConfirmedExamples] = useState<Record<number, boolean>>({});
   const [confirmedPatterns, setConfirmedPatterns] = useState<Record<number, boolean>>({});
   const [confirmedTricks, setConfirmedTricks] = useState<Record<number, boolean>>({});
+  
+  // Updated search state variables
   const [patternSearchQuery, setPatternSearchQuery] = useState("");
   const [trickSearchQuery, setTrickSearchQuery] = useState("");
   const [patternSuggestions, setPatternSuggestions] = useState<Pattern[]>([]);
   const [trickSuggestions, setTrickSuggestions] = useState<Trick[]>([]);
-  const [patternComboboxOpen, setPatternComboboxOpen] = useState(false);
-  const [trickComboboxOpen, setTrickComboboxOpen] = useState(false);
+  const [isPatternSearching, setIsPatternSearching] = useState(false);
+  const [isTrickSearching, setIsTrickSearching] = useState(false);
+  const [showPatternResults, setShowPatternResults] = useState(false);
+  const [showTrickResults, setShowTrickResults] = useState(false);
+  
+  // Refs for dropdown handling
+  const patternSearchRef = useRef<HTMLDivElement>(null);
+  const trickSearchRef = useRef<HTMLDivElement>(null);
+  
+  // State for new pattern/trick creation modal
+  const [isCreatingNewPattern, setIsCreatingNewPattern] = useState(false);
+  const [isCreatingNewTrick, setIsCreatingNewTrick] = useState(false);
+  const [newPatternName, setNewPatternName] = useState("");
+  const [newPatternDescription, setNewPatternDescription] = useState("");
+  const [newTrickName, setNewTrickName] = useState("");
+  const [newTrickDescription, setNewTrickDescription] = useState("");
+  const [isSubmittingNewPattern, setIsSubmittingNewPattern] = useState(false);
+  const [isSubmittingNewTrick, setIsSubmittingNewTrick] = useState(false);
   
   // Update the default values for constraints and examples to be empty arrays
   const form = useForm<FormValues>({
@@ -108,6 +131,23 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
     }
   });
 
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (patternSearchRef.current && !patternSearchRef.current.contains(event.target as Node)) {
+        setShowPatternResults(false);
+      }
+      if (trickSearchRef.current && !trickSearchRef.current.contains(event.target as Node)) {
+        setShowTrickResults(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Fetch pattern suggestions when search query changes
   useEffect(() => {
     const fetchPatternSuggestions = async () => {
@@ -115,6 +155,8 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
         setPatternSuggestions([]);
         return;
       }
+      
+      setIsPatternSearching(true);
       
       try {
         const response = await apiRequest(
@@ -124,13 +166,17 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
         if (response.ok) {
           const data = await response.json();
           setPatternSuggestions(data);
+          setShowPatternResults(true);
         }
       } catch (error) {
         console.error("Error fetching pattern suggestions:", error);
+      } finally {
+        setIsPatternSearching(false);
       }
     };
     
-    fetchPatternSuggestions();
+    const timeoutId = setTimeout(fetchPatternSuggestions, 300);
+    return () => clearTimeout(timeoutId);
   }, [patternSearchQuery]);
   
   // Fetch trick suggestions when search query changes
@@ -141,6 +187,8 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
         return;
       }
       
+      setIsTrickSearching(true);
+      
       try {
         const response = await apiRequest(
           "GET", 
@@ -149,13 +197,17 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
         if (response.ok) {
           const data = await response.json();
           setTrickSuggestions(data);
+          setShowTrickResults(true);
         }
       } catch (error) {
         console.error("Error fetching trick suggestions:", error);
+      } finally {
+        setIsTrickSearching(false);
       }
     };
     
-    fetchTrickSuggestions();
+    const timeoutId = setTimeout(fetchTrickSuggestions, 300);
+    return () => clearTimeout(timeoutId);
   }, [trickSearchQuery]);
 
   const checkLeetcodeNumber = async (number: number) => {
@@ -297,6 +349,9 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
         [patternFields.length]: true
       }));
       
+      // Update the pattern in the database to connect it to this problem
+      updatePatternProblemConnection(pattern.id as string, true);
+      
       toast({
         title: "Pattern added",
         description: `${pattern.name} has been successfully added to this problem.`,
@@ -310,7 +365,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
     }
     
     setPatternSearchQuery("");
-    setPatternComboboxOpen(false);
+    setShowPatternResults(false);
   };
   
   // Helper function to add a trick from suggestions
@@ -332,6 +387,9 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
         [trickFields.length]: true
       }));
       
+      // Update the trick in the database to connect it to this problem
+      updateTrickProblemConnection(trick.id as string, true);
+      
       toast({
         title: "Trick added",
         description: `${trick.name} has been successfully added to this problem.`,
@@ -345,11 +403,15 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
     }
     
     setTrickSearchQuery("");
-    setTrickComboboxOpen(false);
+    setShowTrickResults(false);
   };
   
   // Helper function to create new pattern
-  const handleCreateNewPattern = async () => {
+  const handleCreateNewPattern = (e: React.MouseEvent) => {
+    // Prevent event bubbling which might cause the dialog to close immediately
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (patternSearchQuery.trim().length === 0) {
       toast({
         title: "Empty pattern name",
@@ -359,20 +421,65 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
       return;
     }
     
+    setNewPatternName(patternSearchQuery.trim());
+    setNewPatternDescription("");
+    setIsCreatingNewPattern(true);
+  };
+  
+  // Helper function to submit new pattern with description
+  const handleSubmitNewPattern = async (e: React.FormEvent) => {
+    // Prevent form submission which might cause page refresh or dialog close
+    e.preventDefault();
+    
+    if (!newPatternName.trim()) {
+      toast({
+        title: "Empty pattern name",
+        description: "Pattern name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmittingNewPattern(true);
+    
     try {
+      // Create a problem reference for the current problem
+      const problemRef: ProblemReference = {
+        leetcodeNumber: form.getValues("leetcodeNumber"),
+        title: form.getValues("title")
+      };
+      
+      // Create the pattern with the problem reference
       const response = await apiRequest("POST", "/api/patterns", {
-        name: patternSearchQuery,
-        description: ""
+        name: newPatternName,
+        description: newPatternDescription,
+        problems: [problemRef]
       });
       
       if (response.ok) {
         const newPattern = await response.json();
-        handlePatternSelect(newPattern);
+        
+        // Add the pattern to the problem
+        const patternReference: PatternReference = {
+          id: newPattern.id as string,
+          name: newPattern.name,
+          description: newPattern.description
+        };
+        
+        appendPattern(patternReference);
+        setConfirmedPatterns(prev => ({
+          ...prev,
+          [patternFields.length]: true
+        }));
         
         toast({
           title: "New pattern created",
           description: `'${newPattern.name}' has been created and added to this problem.`,
         });
+        
+        setIsCreatingNewPattern(false);
+        setPatternSearchQuery("");
+        setShowPatternResults(false);
       }
     } catch (error) {
       console.error("Error creating pattern:", error);
@@ -381,11 +488,13 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
         description: "Failed to create new pattern.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmittingNewPattern(false);
     }
   };
   
   // Helper function to create new trick
-  const handleCreateNewTrick = async () => {
+  const handleCreateNewTrick = () => {
     if (trickSearchQuery.trim().length === 0) {
       toast({
         title: "Empty trick name",
@@ -395,20 +504,62 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
       return;
     }
     
+    setNewTrickName(trickSearchQuery.trim());
+    setNewTrickDescription("");
+    setIsCreatingNewTrick(true);
+  };
+  
+  // Helper function to submit new trick with description
+  const handleSubmitNewTrick = async () => {
+    if (!newTrickName.trim()) {
+      toast({
+        title: "Empty trick name",
+        description: "Trick name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmittingNewTrick(true);
+    
     try {
+      // Create a problem reference for the current problem
+      const problemRef: ProblemReference = {
+        leetcodeNumber: form.getValues("leetcodeNumber"),
+        title: form.getValues("title")
+      };
+      
+      // Create the trick with the problem reference
       const response = await apiRequest("POST", "/api/tricks", {
-        name: trickSearchQuery,
-        description: ""
+        name: newTrickName,
+        description: newTrickDescription,
+        problems: [problemRef]
       });
       
       if (response.ok) {
         const newTrick = await response.json();
-        handleTrickSelect(newTrick);
+        
+        // Add the trick to the problem
+        const trickReference: TrickReference = {
+          id: newTrick.id as string,
+          name: newTrick.name,
+          description: newTrick.description
+        };
+        
+        appendTrick(trickReference);
+        setConfirmedTricks(prev => ({
+          ...prev,
+          [trickFields.length]: true
+        }));
         
         toast({
           title: "New trick created",
           description: `'${newTrick.name}' has been created and added to this problem.`,
         });
+        
+        setIsCreatingNewTrick(false);
+        setTrickSearchQuery("");
+        setShowTrickResults(false);
       }
     } catch (error) {
       console.error("Error creating trick:", error);
@@ -417,9 +568,93 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
         description: "Failed to create new trick.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmittingNewTrick(false);
     }
   };
   
+  // Helper function to update the pattern-problem connection
+  const updatePatternProblemConnection = async (patternId: string, isAdding: boolean) => {
+    try {
+      const problemRef: ProblemReference = {
+        leetcodeNumber: form.getValues("leetcodeNumber"),
+        title: form.getValues("title")
+      };
+      
+      if (isAdding) {
+        // Add problem reference to pattern
+        await apiRequest("PATCH", `/api/patterns/${patternId}/problems`, { 
+          action: "add", 
+          problem: problemRef 
+        });
+      } else {
+        // Remove problem reference from pattern
+        await apiRequest("PATCH", `/api/patterns/${patternId}/problems`, { 
+          action: "remove", 
+          leetcodeNumber: problemRef.leetcodeNumber 
+        });
+      }
+    } catch (error) {
+      console.error("Error updating pattern-problem connection:", error);
+    }
+  };
+  
+  // Helper function to update the trick-problem connection
+  const updateTrickProblemConnection = async (trickId: string, isAdding: boolean) => {
+    try {
+      const problemRef: ProblemReference = {
+        leetcodeNumber: form.getValues("leetcodeNumber"),
+        title: form.getValues("title")
+      };
+      
+      if (isAdding) {
+        // Add problem reference to trick
+        await apiRequest("PATCH", `/api/tricks/${trickId}/problems`, { 
+          action: "add", 
+          problem: problemRef 
+        });
+      } else {
+        // Remove problem reference from trick
+        await apiRequest("PATCH", `/api/tricks/${trickId}/problems`, { 
+          action: "remove", 
+          leetcodeNumber: problemRef.leetcodeNumber 
+        });
+      }
+    } catch (error) {
+      console.error("Error updating trick-problem connection:", error);
+    }
+  };
+  
+  // When removing a pattern, also update the pattern-problem connection
+  const handleRemovePattern = (index: number) => {
+    const pattern = form.getValues(`patterns.${index}`);
+    if (pattern.id) {
+      updatePatternProblemConnection(pattern.id, false);
+    }
+    
+    removePattern(index);
+    setConfirmedPatterns(prev => {
+      const newState = {...prev};
+      delete newState[index];
+      return newState;
+    });
+  };
+  
+  // When removing a trick, also update the trick-problem connection
+  const handleRemoveTrick = (index: number) => {
+    const trick = form.getValues(`tricks.${index}`);
+    if (trick.id) {
+      updateTrickProblemConnection(trick.id, false);
+    }
+    
+    removeTrick(index);
+    setConfirmedTricks(prev => {
+      const newState = {...prev};
+      delete newState[index];
+      return newState;
+    });
+  };
+
   // Modified function to save custom pattern to Firebase
   const handleConfirmCustomPattern = async (index: number) => {
     const name = form.getValues(`patterns.${index}.name`);
@@ -562,6 +797,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
               <TabsTrigger value="patterns">Patterns & Tricks</TabsTrigger>
             </TabsList>
             
+            {/* Basic Info Tab */}
             <TabsContent value="basic" className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField
@@ -685,6 +921,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
               />
             </TabsContent>
             
+            {/* Problem Details Tab */}
             <TabsContent value="details" className="space-y-4">
               <div>
                 <div className="flex justify-between items-center mb-2">
@@ -942,84 +1179,77 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
               </div>
             </TabsContent>
             
+            {/* Patterns & Tricks Tab */}
             <TabsContent value="patterns" className="space-y-4">
+              {/* Pattern Section with improved search */}
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <FormLabel>Patterns</FormLabel>
-                  <div className="flex space-x-2">
-                    <Popover open={patternComboboxOpen} onOpenChange={setPatternComboboxOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={patternComboboxOpen}
-                          className="w-[200px] justify-between"
-                        >
-                          <span className="truncate">{patternSearchQuery || "Search patterns..."}</span>
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[200px] p-0">
-                        <Command>
-                          <CommandInput 
-                            placeholder="Search patterns..." 
-                            value={patternSearchQuery}
-                            onValueChange={setPatternSearchQuery}
-                          />
-                          <CommandEmpty>
-                            <div className="py-3 px-2 text-sm">
-                              <div className="mb-2">No patterns found.</div>
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="w-full"
-                                onClick={handleCreateNewPattern}
-                              >
-                                <Plus className="h-4 w-4 mr-2" />
-                                Create "{patternSearchQuery}"
-                              </Button>
-                            </div>
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {patternSuggestions.map((pattern) => (
-                              <CommandItem
-                                key={pattern.id}
-                                onSelect={() => {
-                                  handlePatternSelect(pattern);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    form.getValues("patterns").some(p => p.id === pattern.id)
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                                <div className="flex-1">
-                                  <div className="font-medium">{pattern.name}</div>
-                                  <div className="text-xs text-gray-500 truncate">
-                                    {pattern.description || "No description"}
-                                  </div>
-                                </div>
-                                <div className="text-xs text-gray-400">{pattern.usageCount || 0} uses</div>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <Button
-                      type="button"
-                      variant="link"
-                      size="sm"
-                      className="h-auto p-0 text-primary"
-                      onClick={() => appendPattern({ name: "", description: "", id: "" })}
-                    >
-                      <Plus className="h-4 w-4 mr-1" /> Add Custom
-                    </Button>
-                  </div>
                 </div>
+                
+                {/* Enhanced pattern search */}
+                <div className="relative mb-4" ref={patternSearchRef}>
+                  <div className="flex">
+                    <div className="relative flex-grow">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search patterns or type to create new..."
+                        className="pl-8 pr-10"
+                        value={patternSearchQuery}
+                        onChange={(e) => setPatternSearchQuery(e.target.value)}
+                        onFocus={() => {
+                          if (patternSearchQuery.length >= 2) {
+                            setShowPatternResults(true);
+                          }
+                        }}
+                      />
+                      {isPatternSearching && (
+                        <Loader2 className="absolute right-2 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Pattern results dropdown */}
+                  {showPatternResults && patternSearchQuery.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white dark:bg-slate-900 shadow-lg rounded-md border border-slate-200 dark:border-slate-700 max-h-60 overflow-auto">
+                      {patternSuggestions.length > 0 ? (
+                        <ul className="py-1">
+                          {patternSuggestions.map((pattern) => (
+                            <li 
+                              key={pattern.id} 
+                              className="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-between"
+                              onClick={() => handlePatternSelect(pattern)}
+                            >
+                              <div>
+                                <div className="font-medium">{pattern.name}</div>
+                                <div className="text-xs text-slate-500 truncate max-w-[300px]">
+                                  {pattern.description || "No description"}
+                                </div>
+                              </div>
+                              <div className="text-xs text-slate-400">
+                                {pattern.usageCount || 0} uses
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="p-4">
+                          <p className="text-sm text-slate-600 mb-2">No patterns found with "{patternSearchQuery}"</p>
+                          <Button 
+                            variant="outline" 
+                            className="w-full"
+                            onClick={handleCreateNewPattern}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create new pattern
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Added patterns list */}
                 <div className="space-y-4 border rounded-md p-3 bg-slate-50">
                   {patternFields.length > 0 ? (
                     patternFields.map((field, index) => (
@@ -1034,7 +1264,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                               {form.getValues(`patterns.${index}.name`)}
                             </div>
                             <div className="text-sm">
-                              {form.getValues(`patterns.${index}.description`)}
+                              {form.getValues(`patterns.${index}.description`) || "No description"}
                             </div>
                             <div className="flex justify-end mt-2">
                               <Button
@@ -1042,14 +1272,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                                 variant="ghost"
                                 size="sm"
                                 className="h-8 px-2 text-red-500 hover:text-red-600"
-                                onClick={() => {
-                                  removePattern(index);
-                                  setConfirmedPatterns(prev => {
-                                    const newState = {...prev};
-                                    delete newState[index];
-                                    return newState;
-                                  });
-                                }}
+                                onClick={() => handleRemovePattern(index)}
                               >
                                 <X className="h-4 w-4 mr-1" /> Remove
                               </Button>
@@ -1117,83 +1340,75 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                 </div>
               </div>
 
+              {/* Trick Section with improved search */}
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <FormLabel>Tricks</FormLabel>
-                  <div className="flex space-x-2">
-                    <Popover open={trickComboboxOpen} onOpenChange={setTrickComboboxOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={trickComboboxOpen}
-                          className="w-[200px] justify-between"
-                        >
-                          <span className="truncate">{trickSearchQuery || "Search tricks..."}</span>
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[200px] p-0">
-                        <Command>
-                          <CommandInput 
-                            placeholder="Search tricks..." 
-                            value={trickSearchQuery}
-                            onValueChange={setTrickSearchQuery}
-                          />
-                          <CommandEmpty>
-                            <div className="py-3 px-2 text-sm">
-                              <div className="mb-2">No tricks found.</div>
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="w-full"
-                                onClick={handleCreateNewTrick}
-                              >
-                                <Plus className="h-4 w-4 mr-2" />
-                                Create "{trickSearchQuery}"
-                              </Button>
-                            </div>
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {trickSuggestions.map((trick) => (
-                              <CommandItem
-                                key={trick.id}
-                                onSelect={() => {
-                                  handleTrickSelect(trick);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    form.getValues("tricks").some(t => t.id === trick.id)
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                                <div className="flex-1">
-                                  <div className="font-medium">{trick.name}</div>
-                                  <div className="text-xs text-gray-500 truncate">
-                                    {trick.description || "No description"}
-                                  </div>
-                                </div>
-                                <div className="text-xs text-gray-400">{trick.usageCount || 0} uses</div>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <Button
-                      type="button"
-                      variant="link"
-                      size="sm"
-                      className="h-auto p-0 text-primary"
-                      onClick={() => appendTrick({ name: "", description: "", id: "" })}
-                    >
-                      <Plus className="h-4 w-4 mr-1" /> Add Custom
-                    </Button>
-                  </div>
                 </div>
+                
+                {/* Enhanced trick search */}
+                <div className="relative mb-4" ref={trickSearchRef}>
+                  <div className="flex">
+                    <div className="relative flex-grow">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search tricks or type to create new..."
+                        className="pl-8 pr-10"
+                        value={trickSearchQuery}
+                        onChange={(e) => setTrickSearchQuery(e.target.value)}
+                        onFocus={() => {
+                          if (trickSearchQuery.length >= 2) {
+                            setShowTrickResults(true);
+                          }
+                        }}
+                      />
+                      {isTrickSearching && (
+                        <Loader2 className="absolute right-2 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Trick results dropdown */}
+                  {showTrickResults && trickSearchQuery.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white dark:bg-slate-900 shadow-lg rounded-md border border-slate-200 dark:border-slate-700 max-h-60 overflow-auto">
+                      {trickSuggestions.length > 0 ? (
+                        <ul className="py-1">
+                          {trickSuggestions.map((trick) => (
+                            <li 
+                              key={trick.id} 
+                              className="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-between"
+                              onClick={() => handleTrickSelect(trick)}
+                            >
+                              <div>
+                                <div className="font-medium">{trick.name}</div>
+                                <div className="text-xs text-slate-500 truncate max-w-[300px]">
+                                  {trick.description || "No description"}
+                                </div>
+                              </div>
+                              <div className="text-xs text-slate-400">
+                                {trick.usageCount || 0} uses
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="p-4">
+                          <p className="text-sm text-slate-600 mb-2">No tricks found with "{trickSearchQuery}"</p>
+                          <Button 
+                            variant="outline" 
+                            className="w-full"
+                            onClick={handleCreateNewTrick}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create new trick
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Added tricks list */}
                 <div className="space-y-4 border rounded-md p-3 bg-slate-50">
                   {trickFields.length > 0 ? (
                     trickFields.map((field, index) => (
@@ -1208,7 +1423,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                               {form.getValues(`tricks.${index}.name`)}
                             </div>
                             <div className="text-sm">
-                              {form.getValues(`tricks.${index}.description`)}
+                              {form.getValues(`tricks.${index}.description`) || "No description"}
                             </div>
                             <div className="flex justify-end mt-2">
                               <Button
@@ -1216,14 +1431,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                                 variant="ghost"
                                 size="sm"
                                 className="h-8 px-2 text-red-500 hover:text-red-600"
-                                onClick={() => {
-                                  removeTrick(index);
-                                  setConfirmedTricks(prev => {
-                                    const newState = {...prev};
-                                    delete newState[index];
-                                    return newState;
-                                  });
-                                }}
+                                onClick={() => handleRemoveTrick(index)}
                               >
                                 <X className="h-4 w-4 mr-1" /> Remove
                               </Button>
@@ -1332,6 +1540,124 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
           </div>
         </form>
       </Form>
+      
+      {/* Dialog for creating new pattern */}
+      <Dialog open={isCreatingNewPattern} onOpenChange={(open) => !open && setIsCreatingNewPattern(false)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Pattern</DialogTitle>
+            <DialogDescription>
+              Create a new pattern that can be reused across problems
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Name</label>
+              <Input 
+                value={newPatternName}
+                onChange={(e) => setNewPatternName(e.target.value)}
+                placeholder="Pattern name"
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Description</label>
+              <Textarea
+                value={newPatternDescription}
+                onChange={(e) => setNewPatternDescription(e.target.value)}
+                placeholder="Explain how this pattern is used in algorithm problems"
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex justify-end space-x-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsCreatingNewPattern(false);
+                setPatternSearchQuery("");
+              }}
+              disabled={isSubmittingNewPattern}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSubmitNewPattern}
+              disabled={isSubmittingNewPattern}
+            >
+              {isSubmittingNewPattern ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Pattern"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog for creating new trick */}
+      <Dialog open={isCreatingNewTrick} onOpenChange={(open) => !open && setIsCreatingNewTrick(false)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Trick</DialogTitle>
+            <DialogDescription>
+              Create a new trick that can be reused across problems
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Name</label>
+              <Input 
+                value={newTrickName}
+                onChange={(e) => setNewTrickName(e.target.value)}
+                placeholder="Trick name"
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Description</label>
+              <Textarea
+                value={newTrickDescription}
+                onChange={(e) => setNewTrickDescription(e.target.value)}
+                placeholder="Explain how this trick can be applied to algorithm problems"
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex justify-end space-x-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsCreatingNewTrick(false);
+                setTrickSearchQuery("");
+              }}
+              disabled={isSubmittingNewTrick}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSubmitNewTrick}
+              disabled={isSubmittingNewTrick}
+            >
+              {isSubmittingNewTrick ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Trick"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

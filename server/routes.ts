@@ -235,6 +235,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Update pattern-problem connection
+  patternsRouter.patch("/:id/problems", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { action, problem, leetcodeNumber } = req.body;
+      
+      // Validate input
+      if (!id) {
+        return res.status(400).json({ error: "Pattern ID is required" });
+      }
+
+      if (action !== "add" && action !== "remove") {
+        return res.status(400).json({ error: "Invalid action. Use 'add' or 'remove'" });
+      }
+
+      const result = action === "add"
+        ? await storage.addProblemToPattern(id, problem)
+        : await storage.removeProblemFromPattern(id, leetcodeNumber);
+
+      if (!result) {
+        return res.status(404).json({ error: "Pattern not found or update failed" });
+      }
+
+      res.status(200).json({ message: `Problem ${action === "add" ? "added to" : "removed from"} pattern successfully` });
+    } catch (error) {
+      console.error("Error updating pattern problems:", error);
+      res.status(500).json({ error: "Failed to update pattern" });
+    }
+  });
+  
   // Get a specific pattern - Ensure this is the LAST route defined
   patternsRouter.get("/:id", async (req: Request, res: Response) => {
     try {
@@ -355,6 +385,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating trick:", error);
       res.status(500).json({ message: "Failed to update trick" });
+    }
+  });
+  
+  // Update trick-problem connection
+  tricksRouter.patch("/:id/problems", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { action, problem, leetcodeNumber } = req.body;
+      
+      // Validate input
+      if (!id) {
+        return res.status(400).json({ error: "Trick ID is required" });
+      }
+
+      if (action !== "add" && action !== "remove") {
+        return res.status(400).json({ error: "Invalid action. Use 'add' or 'remove'" });
+      }
+
+      const result = action === "add"
+        ? await storage.addProblemToTrick(id, problem)
+        : await storage.removeProblemFromTrick(id, leetcodeNumber);
+
+      if (!result) {
+        return res.status(404).json({ error: "Trick not found or update failed" });
+      }
+
+      res.status(200).json({ message: `Problem ${action === "add" ? "added to" : "removed from"} trick successfully` });
+    } catch (error) {
+      console.error("Error updating trick problems:", error);
+      res.status(500).json({ error: "Failed to update trick" });
     }
   });
   
