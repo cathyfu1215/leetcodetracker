@@ -13,7 +13,7 @@ export default function PatternDetail() {
   const { toast } = useToast();
   
   const patternId = params?.id || "";
-  console.log("Pattern ID from URL:", patternId); // Debug log
+  console.log("Pattern ID from URL:", patternId);
   
   // Fetch pattern details
   const { 
@@ -25,7 +25,7 @@ export default function PatternDetail() {
     queryKey: ['/api/patterns', patternId],
     queryFn: async () => {
       if (!patternId) throw new Error("Invalid pattern ID");
-      console.log("Fetching pattern with ID:", patternId); // Debug log
+      console.log("Fetching pattern with ID:", patternId);
       
       try {
         const response = await apiRequest('GET', `/api/patterns/${patternId}`);
@@ -35,7 +35,7 @@ export default function PatternDetail() {
           throw new Error(`API returned ${response.status}: ${errorData.message || response.statusText}`);
         }
         const data = await response.json();
-        console.log("Pattern data received:", data); // Debug log
+        console.log("Pattern data received:", data);
         return data;
       } catch (error) {
         console.error("Error fetching pattern:", error);
@@ -63,7 +63,7 @@ export default function PatternDetail() {
     queryKey: ['/api/patterns', patternId, 'problems'],
     queryFn: async () => {
       if (!patternId) throw new Error("Invalid pattern ID");
-      console.log("Fetching problems for pattern ID:", patternId); // Debug log
+      console.log("Fetching problems for pattern ID:", patternId);
       
       try {
         const response = await apiRequest('GET', `/api/patterns/${patternId}/problems`);
@@ -73,14 +73,14 @@ export default function PatternDetail() {
           throw new Error(`API returned ${response.status}: ${errorData.message || response.statusText}`);
         }
         const data = await response.json();
-        console.log("Related problems received:", data); // Debug log
+        console.log("Related problems received:", data);
         return data;
       } catch (error) {
         console.error("Error fetching related problems:", error);
         throw error;
       }
     },
-    enabled: !!patternId && !isPatternLoading,
+    enabled: !!patternId,
     onError: (error) => {
       console.error("Problems query error:", error);
       toast({

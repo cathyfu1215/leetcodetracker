@@ -13,7 +13,7 @@ export default function TrickDetail() {
   const { toast } = useToast();
   
   const trickId = params?.id || "";
-  console.log("Trick ID from URL:", trickId); // Debug log
+  console.log("Trick ID from URL:", trickId);
   
   // Fetch trick details
   const { 
@@ -25,7 +25,7 @@ export default function TrickDetail() {
     queryKey: ['/api/tricks', trickId],
     queryFn: async () => {
       if (!trickId) throw new Error("Invalid trick ID");
-      console.log("Fetching trick with ID:", trickId); // Debug log
+      console.log("Fetching trick with ID:", trickId);
       
       try {
         const response = await apiRequest('GET', `/api/tricks/${trickId}`);
@@ -35,7 +35,7 @@ export default function TrickDetail() {
           throw new Error(`API returned ${response.status}: ${errorData.message || response.statusText}`);
         }
         const data = await response.json();
-        console.log("Trick data received:", data); // Debug log
+        console.log("Trick data received:", data);
         return data;
       } catch (error) {
         console.error("Error fetching trick:", error);
@@ -63,7 +63,7 @@ export default function TrickDetail() {
     queryKey: ['/api/tricks', trickId, 'problems'],
     queryFn: async () => {
       if (!trickId) throw new Error("Invalid trick ID");
-      console.log("Fetching problems for trick ID:", trickId); // Debug log
+      console.log("Fetching problems for trick ID:", trickId);
       
       try {
         const response = await apiRequest('GET', `/api/tricks/${trickId}/problems`);
@@ -73,14 +73,14 @@ export default function TrickDetail() {
           throw new Error(`API returned ${response.status}: ${errorData.message || response.statusText}`);
         }
         const data = await response.json();
-        console.log("Related problems received:", data); // Debug log
+        console.log("Related problems received:", data);
         return data;
       } catch (error) {
         console.error("Error fetching related problems:", error);
         throw error;
       }
     },
-    enabled: !!trickId && !isTrickLoading,
+    enabled: !!trickId,
     onError: (error) => {
       console.error("Problems query error:", error);
       toast({
