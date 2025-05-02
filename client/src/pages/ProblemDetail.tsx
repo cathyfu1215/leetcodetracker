@@ -20,10 +20,10 @@ export default function ProblemDetail() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
-  // Visibility state for each section - hidden by default
-  const [showPatterns, setShowPatterns] = useState(false);
-  const [showTricks, setShowTricks] = useState(false);
-  const [showNotes, setShowNotes] = useState(false);
+  // Visibility state for each section - not hidden by default
+  const [showPatterns, setShowPatterns] = useState(true);
+  const [showTricks, setShowTricks] = useState(true);
+  const [showNotes, setShowNotes] = useState(true);
   
   const { toast } = useToast();
   
@@ -177,7 +177,7 @@ export default function ProblemDetail() {
             <Puzzle className="text-slate-400 mr-2 h-4 w-4" />
             <span>
               <span className="text-slate-500">Patterns: </span>
-              <span>{problem.patterns?.map(p => p.name).join(", ") || "None"}</span>
+              <span>{problem.patterns?.length || 0}</span>
             </span>
           </div>
           
@@ -241,7 +241,14 @@ export default function ProblemDetail() {
               <div className="space-y-4">
                 {problem.patterns?.map((pattern, index) => (
                   <div key={index} className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 dark:bg-slate-800">
-                    <h3 className="text-lg font-medium mb-2 dark:text-slate-200">{pattern.name}</h3>
+                    <Button
+                      variant="link"
+                      className="p-0 text-lg font-medium mb-2 dark:text-slate-200 hover:text-primary flex items-center"
+                      onClick={() => setLocation(`/patterns/${pattern.id}`)}
+                    >
+                      <Puzzle className="h-4 w-4 mr-1.5 text-primary" />
+                      {pattern.name}
+                    </Button>
                     <p className="text-slate-700 dark:text-slate-300">{pattern.description}</p>
                   </div>
                 ))}
@@ -275,7 +282,14 @@ export default function ProblemDetail() {
               <div className="space-y-4">
                 {problem.tricks?.map((trick, index) => (
                   <div key={index} className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 dark:bg-slate-800">
-                    <h3 className="text-lg font-medium mb-2 dark:text-slate-200">{trick.name}</h3>
+                    <Button
+                      variant="link"
+                      className="p-0 text-lg font-medium mb-2 dark:text-slate-200 hover:text-primary flex items-center"
+                      onClick={() => setLocation(`/tricks/${trick.id}`)}
+                    >
+                      <Lightbulb className="h-4 w-4 mr-1.5 text-amber-500" />
+                      {trick.name}
+                    </Button>
                     <p className="text-slate-700 dark:text-slate-300">{trick.description}</p>
                   </div>
                 ))}
