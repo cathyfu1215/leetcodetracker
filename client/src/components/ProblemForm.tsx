@@ -813,11 +813,11 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Problem Title</FormLabel>
+                      <FormLabel className="dark:text-slate-300">Problem Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="" {...field} />
+                        <Input placeholder="" {...field} className="dark:border-slate-700 dark:bg-slate-800" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="dark:text-slate-400" />
                     </FormItem>
                   )}
                 />
@@ -827,7 +827,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                   name="leetcodeNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>LeetCode Number</FormLabel>
+                      <FormLabel className="dark:text-slate-300">LeetCode Number</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input
@@ -852,7 +852,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                               const value = e.currentTarget.value === "" ? 0 : parseInt(e.currentTarget.value);
                               field.onChange(isNaN(value) ? 0 : value);
                             }}
-                            className="appearance-none"
+                            className="appearance-none dark:border-slate-700 dark:bg-slate-800"
                           />
                           {leetcodeNumberStatus === "valid" && (
                             <CheckCircle className="absolute right-2 top-2 text-green-500" />
@@ -877,12 +877,11 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                 control={form.control}
                 name="url"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>LeetCode URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://leetcode.com/problems/..." {...field} />
-                    </FormControl>
-                    <FormMessage />
+                  <FormItem>                      <FormLabel className="dark:text-slate-300">LeetCode URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://leetcode.com/problems/..." {...field} className="dark:border-slate-700 dark:bg-slate-800" />
+                      </FormControl>
+                      <FormMessage className="dark:text-slate-400" />
                   </FormItem>
                 )}
               />
@@ -892,15 +891,15 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                 name="content"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Problem Content</FormLabel>
+                    <FormLabel className="dark:text-slate-300">Problem Content</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Paste the problem description here. Markdown is supported." 
-                        className="min-h-[150px]"
+                        className="min-h-[150px] dark:border-slate-700 dark:bg-slate-800"
                         {...field} 
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="dark:text-slate-400" />
                   </FormItem>
                 )}
               />
@@ -910,7 +909,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                 name="difficulty"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Difficulty</FormLabel>
+                    <FormLabel className="dark:text-slate-300">Difficulty</FormLabel>
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
@@ -921,19 +920,19 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                           <FormControl>
                             <RadioGroupItem value="Easy" />
                           </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">Easy</FormLabel>
+                          <FormLabel className="font-normal cursor-pointer dark:text-slate-300">Easy</FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-2">
                           <FormControl>
                             <RadioGroupItem value="Medium" />
                           </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">Medium</FormLabel>
+                          <FormLabel className="font-normal cursor-pointer dark:text-slate-300">Medium</FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-2">
                           <FormControl>
                             <RadioGroupItem value="Hard" />
                           </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">Hard</FormLabel>
+                          <FormLabel className="font-normal cursor-pointer dark:text-slate-300">Hard</FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -947,7 +946,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
             <TabsContent value="details" className="space-y-4">
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <FormLabel>Constraints</FormLabel>
+                  <FormLabel className="dark:text-slate-300">Constraints</FormLabel>
                   <Button
                     type="button"
                     variant="link"
@@ -958,13 +957,13 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                     <Plus className="h-4 w-4 mr-1" /> Add Constraint
                   </Button>
                 </div>
-                <div className="space-y-2 border rounded-md p-3 bg-slate-50">
+                <div className="space-y-2 border rounded-md p-3 bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
                   {constraintFields.length > 0 ? (
                     constraintFields.map((field, index) => (
                       <div key={field.id} className="flex items-center space-x-2">
                         {confirmedConstraints[index] ? (
                           <>
-                            <span className="text-sm text-gray-700 flex-grow">• {form.getValues(`constraints.${index}`)}</span>
+                            <span className="text-sm text-gray-700 dark:text-gray-300 flex-grow">• {form.getValues(`constraints.${index}`)}</span>
                             <Button
                               type="button"
                               variant="ghost"
@@ -991,7 +990,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                               render={({ field }) => (
                                 <FormItem className="flex-grow mb-0">
                                   <FormControl>
-                                    <Input placeholder="e.g., 1 <= nums.length <= 10^5" {...field} />
+                                    <Input placeholder="e.g., 1 <= nums.length <= 10^5" {...field} className="dark:border-slate-700 dark:bg-slate-800" />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -1044,14 +1043,14 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-slate-500 p-2">No constraints added yet.</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 p-2">No constraints added yet.</p>
                   )}
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <FormLabel>Examples</FormLabel>
+                  <FormLabel className="dark:text-slate-300">Examples</FormLabel>
                   <Button
                     type="button"
                     variant="link"
@@ -1062,28 +1061,28 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                     <Plus className="h-4 w-4 mr-1" /> Add Example
                   </Button>
                 </div>
-                <div className="space-y-4 border rounded-md p-3 bg-slate-50">
+                <div className="space-y-4 border rounded-md p-3 bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
                   {exampleFields.length > 0 ? (
                     exampleFields.map((field, index) => (
-                      <div key={field.id} className="space-y-2 pb-4 border-b last:border-0">
+                      <div key={field.id} className="space-y-2 pb-4 border-b dark:border-slate-700 last:border-0">
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium">Example {index + 1}</span>
+                          <span className="text-sm font-medium dark:text-slate-200">Example {index + 1}</span>
                         </div>
                         
                         {confirmedExamples[index] ? (
-                          <div className="bg-slate-100 rounded-md p-3 space-y-1">
+                          <div className="bg-slate-100 dark:bg-slate-700 rounded-md p-3 space-y-1">
                             <div className="flex">
-                              <span className="text-sm font-medium w-24">Input:</span>
-                              <span className="text-sm">{form.getValues(`examples.${index}.input`)}</span>
+                              <span className="text-sm font-medium w-24 dark:text-slate-300">Input:</span>
+                              <span className="text-sm dark:text-slate-200">{form.getValues(`examples.${index}.input`)}</span>
                             </div>
                             <div className="flex">
-                              <span className="text-sm font-medium w-24">Output:</span>
-                              <span className="text-sm">{form.getValues(`examples.${index}.output`)}</span>
+                              <span className="text-sm font-medium w-24 dark:text-slate-300">Output:</span>
+                              <span className="text-sm dark:text-slate-200">{form.getValues(`examples.${index}.output`)}</span>
                             </div>
                             {form.getValues(`examples.${index}.explanation`) && (
                               <div className="flex">
-                                <span className="text-sm font-medium w-24">Explanation:</span>
-                                <span className="text-sm">{form.getValues(`examples.${index}.explanation`)}</span>
+                                <span className="text-sm font-medium w-24 dark:text-slate-300">Explanation:</span>
+                                <span className="text-sm dark:text-slate-200">{form.getValues(`examples.${index}.explanation`)}</span>
                               </div>
                             )}
                             <div className="flex justify-end mt-2">
@@ -1112,11 +1111,11 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                               name={`examples.${index}.input`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-xs">Input</FormLabel>
+                                  <FormLabel className="text-xs dark:text-slate-300">Input</FormLabel>
                                   <FormControl>
-                                    <Input {...field} />
+                                    <Input {...field} className="dark:border-slate-700 dark:bg-slate-800" />
                                   </FormControl>
-                                  <FormMessage />
+                                  <FormMessage className="dark:text-slate-400" />
                                 </FormItem>
                               )}
                             />
@@ -1126,11 +1125,11 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                               name={`examples.${index}.output`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-xs">Output</FormLabel>
+                                  <FormLabel className="text-xs dark:text-slate-300">Output</FormLabel>
                                   <FormControl>
-                                    <Input {...field} />
+                                    <Input {...field} className="dark:border-slate-700 dark:bg-slate-800" />
                                   </FormControl>
-                                  <FormMessage />
+                                  <FormMessage className="dark:text-slate-400" />
                                 </FormItem>
                               )}
                             />
@@ -1140,11 +1139,11 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                               name={`examples.${index}.explanation`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-xs">Explanation (Optional)</FormLabel>
+                                  <FormLabel className="text-xs dark:text-slate-300">Explanation (Optional)</FormLabel>
                                   <FormControl>
-                                    <Input {...field} />
+                                    <Input {...field} className="dark:border-slate-700 dark:bg-slate-800" />
                                   </FormControl>
-                                  <FormMessage />
+                                  <FormMessage className="dark:text-slate-400" />
                                 </FormItem>
                               )}
                             />
@@ -1195,7 +1194,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-slate-500 p-2">No examples added yet.</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 p-2">No examples added yet.</p>
                   )}
                 </div>
               </div>
@@ -1206,7 +1205,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
               {/* Pattern Section with improved search */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <FormLabel>Patterns</FormLabel>
+                  <FormLabel className="dark:text-slate-300">Patterns</FormLabel>
                 </div>
                 
                 {/* Enhanced pattern search */}
@@ -1216,7 +1215,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                       <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                         placeholder="Search patterns or type to create new..."
-                        className="pl-8 pr-10"
+                        className="pl-8 pr-10 dark:border-slate-700 dark:bg-slate-800"
                         value={patternSearchQuery}
                         onChange={(e) => setPatternSearchQuery(e.target.value)}
                         onFocus={() => {
@@ -1243,12 +1242,12 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                               onClick={() => handlePatternSelect(pattern)}
                             >
                               <div>
-                                <div className="font-medium">{pattern.name}</div>
-                                <div className="text-xs text-slate-500 truncate max-w-[300px]">
+                                <div className="font-medium dark:text-slate-200">{pattern.name}</div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[300px]">
                                   {pattern.description || "No description"}
                                 </div>
                               </div>
-                              <div className="text-xs text-slate-400">
+                              <div className="text-xs text-slate-400 dark:text-slate-500">
                                 {pattern.usageCount || 0} uses
                               </div>
                             </li>
@@ -1256,7 +1255,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                         </ul>
                       ) : (
                         <div className="p-4">
-                          <p className="text-sm text-slate-600 mb-2">No patterns found with "{patternSearchQuery}"</p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">No patterns found with "{patternSearchQuery}"</p>
                           <Button 
                             variant="outline" 
                             className="w-full"
@@ -1272,20 +1271,20 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                 </div>
 
                 {/* Added patterns list */}
-                <div className="space-y-4 border rounded-md p-3 bg-slate-50">
+                <div className="space-y-4 border rounded-md p-3 bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
                   {patternFields.length > 0 ? (
                     patternFields.map((field, index) => (
-                      <div key={field.id} className="space-y-2 pb-4 border-b last:border-0">
+                      <div key={field.id} className="space-y-2 pb-4 border-b dark:border-slate-700 last:border-0">
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium">Pattern {index + 1}</span>
+                          <span className="text-sm font-medium dark:text-slate-200">Pattern {index + 1}</span>
                         </div>
                         
                         {confirmedPatterns[index] ? (
-                          <div className="bg-slate-100 rounded-md p-3 space-y-1">
-                            <div className="font-medium text-sm">
+                          <div className="bg-slate-100 dark:bg-slate-700 rounded-md p-3 space-y-1">
+                            <div className="font-medium text-sm dark:text-slate-200">
                               {form.getValues(`patterns.${index}.name`)}
                             </div>
-                            <div className="text-sm">
+                            <div className="text-sm dark:text-slate-300">
                               {form.getValues(`patterns.${index}.description`) || "No description"}
                             </div>
                             <div className="flex justify-end mt-2">
@@ -1307,11 +1306,11 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                               name={`patterns.${index}.name`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-xs">Name</FormLabel>
+                                  <FormLabel className="text-xs dark:text-slate-300">Name</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="e.g., Sliding Window" {...field} />
+                                    <Input placeholder="e.g., Sliding Window" {...field} className="dark:border-slate-700 dark:bg-slate-800" />
                                   </FormControl>
-                                  <FormMessage />
+                                  <FormMessage className="dark:text-slate-400" />
                                 </FormItem>
                               )}
                             />
@@ -1321,15 +1320,15 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                               name={`patterns.${index}.description`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-xs">Description</FormLabel>
+                                  <FormLabel className="text-xs dark:text-slate-300">Description</FormLabel>
                                   <FormControl>
                                     <Textarea 
                                       placeholder="Explain how this pattern applies to the problem" 
-                                      className="min-h-[80px]"
+                                      className="min-h-[80px] dark:border-slate-700 dark:bg-slate-800"
                                       {...field} 
                                     />
                                   </FormControl>
-                                  <FormMessage />
+                                  <FormMessage className="dark:text-slate-400" />
                                 </FormItem>
                               )}
                             />
@@ -1357,7 +1356,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-slate-500 p-2">No patterns added yet.</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 p-2">No patterns added yet.</p>
                   )}
                 </div>
               </div>
@@ -1365,7 +1364,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
               {/* Trick Section with improved search */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <FormLabel>Tricks</FormLabel>
+                  <FormLabel className="dark:text-slate-300">Tricks</FormLabel>
                 </div>
                 
                 {/* Enhanced trick search */}
@@ -1375,7 +1374,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                       <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                         placeholder="Search tricks or type to create new..."
-                        className="pl-8 pr-10"
+                        className="pl-8 pr-10 dark:border-slate-700 dark:bg-slate-800"
                         value={trickSearchQuery}
                         onChange={(e) => setTrickSearchQuery(e.target.value)}
                         onFocus={() => {
@@ -1402,12 +1401,12 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                               onClick={() => handleTrickSelect(trick)}
                             >
                               <div>
-                                <div className="font-medium">{trick.name}</div>
-                                <div className="text-xs text-slate-500 truncate max-w-[300px]">
+                                <div className="font-medium dark:text-slate-200">{trick.name}</div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[300px]">
                                   {trick.description || "No description"}
                                 </div>
                               </div>
-                              <div className="text-xs text-slate-400">
+                              <div className="text-xs text-slate-400 dark:text-slate-500">
                                 {trick.usageCount || 0} uses
                               </div>
                             </li>
@@ -1415,10 +1414,10 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                         </ul>
                       ) : (
                         <div className="p-4">
-                          <p className="text-sm text-slate-600 mb-2">No tricks found with "{trickSearchQuery}"</p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">No tricks found with "{trickSearchQuery}"</p>
                           <Button 
                             variant="outline" 
-                            className="w-full"
+                            className="w-full dark:border-slate-700"
                             onClick={handleCreateNewTrick}
                           >
                             <Plus className="mr-2 h-4 w-4" />
@@ -1431,20 +1430,20 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                 </div>
                 
                 {/* Added tricks list */}
-                <div className="space-y-4 border rounded-md p-3 bg-slate-50">
+                <div className="space-y-4 border rounded-md p-3 bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
                   {trickFields.length > 0 ? (
                     trickFields.map((field, index) => (
-                      <div key={field.id} className="space-y-2 pb-4 border-b last:border-0">
+                      <div key={field.id} className="space-y-2 pb-4 border-b dark:border-slate-700 last:border-0">
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium">Trick {index + 1}</span>
+                          <span className="text-sm font-medium dark:text-slate-200">Trick {index + 1}</span>
                         </div>
                         
                         {confirmedTricks[index] ? (
-                          <div className="bg-slate-100 rounded-md p-3 space-y-1">
-                            <div className="font-medium text-sm">
+                          <div className="bg-slate-100 dark:bg-slate-700 rounded-md p-3 space-y-1">
+                            <div className="font-medium text-sm dark:text-slate-200">
                               {form.getValues(`tricks.${index}.name`)}
                             </div>
-                            <div className="text-sm">
+                            <div className="text-sm dark:text-slate-300">
                               {form.getValues(`tricks.${index}.description`) || "No description"}
                             </div>
                             <div className="flex justify-end mt-2">
@@ -1466,11 +1465,11 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                               name={`tricks.${index}.name`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-xs">Name</FormLabel>
+                                  <FormLabel className="text-xs dark:text-slate-300">Name</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="e.g., Use deque for O(1) operations" {...field} />
+                                    <Input placeholder="e.g., Use deque for O(1) operations" {...field} className="dark:border-slate-700 dark:bg-slate-800" />
                                   </FormControl>
-                                  <FormMessage />
+                                  <FormMessage className="dark:text-slate-400" />
                                 </FormItem>
                               )}
                             />
@@ -1480,15 +1479,15 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                               name={`tricks.${index}.description`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-xs">Description</FormLabel>
+                                  <FormLabel className="text-xs dark:text-slate-300">Description</FormLabel>
                                   <FormControl>
                                     <Textarea 
                                       placeholder="Explain why this trick is helpful" 
-                                      className="min-h-[80px]"
+                                      className="min-h-[80px] dark:border-slate-700 dark:bg-slate-800"
                                       {...field} 
                                     />
                                   </FormControl>
-                                  <FormMessage />
+                                  <FormMessage className="dark:text-slate-400" />
                                 </FormItem>
                               )}
                             />
@@ -1516,7 +1515,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-slate-500 p-2">No tricks added yet.</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 p-2">No tricks added yet.</p>
                   )}
                 </div>
               </div>
@@ -1526,16 +1525,16 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Notes</FormLabel>
+                    <FormLabel className="dark:text-slate-300">Notes</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Add any additional notes here. Markdown is supported." 
-                        className="min-h-[100px]"
+                        className="min-h-[100px] dark:border-slate-700 dark:bg-slate-800"
                         {...field} 
                         value={field.value || ""}
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="dark:text-slate-400" />
                   </FormItem>
                 )}
               />
@@ -1565,30 +1564,31 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
       
       {/* Dialog for creating new pattern */}
       <Dialog open={isCreatingNewPattern} onOpenChange={(open) => !open && setIsCreatingNewPattern(false)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md dark:bg-slate-900 dark:border-slate-800">
           <DialogHeader>
-            <DialogTitle>Create New Pattern</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="dark:text-slate-100">Create New Pattern</DialogTitle>
+            <DialogDescription className="dark:text-slate-300">
               Create a new pattern that can be reused across problems
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Name</label>
+              <label className="text-sm font-medium dark:text-slate-300">Name</label>
               <Input 
                 value={newPatternName}
                 onChange={(e) => setNewPatternName(e.target.value)}
                 placeholder="Pattern name"
                 autoFocus
+                className="dark:border-slate-700 dark:bg-slate-800"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Description</label>
+              <label className="text-sm font-medium dark:text-slate-300">Description</label>
               <Textarea
                 value={newPatternDescription}
                 onChange={(e) => setNewPatternDescription(e.target.value)}
                 placeholder="Explain how this pattern is used in algorithm problems"
-                className="min-h-[100px]"
+                className="min-h-[100px] dark:border-slate-700 dark:bg-slate-800"
               />
             </div>
           </div>
@@ -1624,30 +1624,31 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
       
       {/* Dialog for creating new trick */}
       <Dialog open={isCreatingNewTrick} onOpenChange={(open) => !open && setIsCreatingNewTrick(false)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md dark:bg-slate-900 dark:border-slate-800">
           <DialogHeader>
-            <DialogTitle>Create New Trick</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="dark:text-slate-100">Create New Trick</DialogTitle>
+            <DialogDescription className="dark:text-slate-300">
               Create a new trick that can be reused across problems
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Name</label>
+              <label className="text-sm font-medium dark:text-slate-300">Name</label>
               <Input 
                 value={newTrickName}
                 onChange={(e) => setNewTrickName(e.target.value)}
                 placeholder="Trick name"
                 autoFocus
+                className="dark:border-slate-700 dark:bg-slate-800"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Description</label>
+              <label className="text-sm font-medium dark:text-slate-300">Description</label>
               <Textarea
                 value={newTrickDescription}
                 onChange={(e) => setNewTrickDescription(e.target.value)}
                 placeholder="Explain how this trick can be applied to algorithm problems"
-                className="min-h-[100px]"
+                className="min-h-[100px] dark:border-slate-700 dark:bg-slate-800"
               />
             </div>
           </div>
