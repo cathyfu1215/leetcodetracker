@@ -234,6 +234,7 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
   }, [form]);
 
   // Set up field arrays for repeating elements
+  // @ts-ignore - Working around React Hook Form typings
   const { 
     fields: constraintFields, 
     append: appendConstraint, 
@@ -241,12 +242,12 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
     update: updateConstraint 
   } = useFieldArray({
     control: form.control,
-    name: "constraints" as const
+    name: "constraints"
   });
 
   // Removed validation from the Add Constraint button and moved it to the Confirm button.
   const handleAddConstraint = () => {
-    appendConstraint(""); // Always append an empty string when adding a new constraint
+    appendConstraint("" as any); // Always append an empty string when adding a new constraint
   };
 
   const { 
@@ -833,9 +834,23 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                             type="number"
                             placeholder=""
                             {...field}
+                            value={field.value === 0 ? "" : field.value}
+                            onFocus={(e) => {
+                              // When focused and value is 0, clear the display
+                              if (field.value === 0) {
+                                e.currentTarget.value = "";
+                              }
+                            }}
+                            onBlur={(e) => {
+                              // When leaving field and it's empty, set back to 0
+                              if (e.currentTarget.value === "") {
+                                field.onChange(0);
+                              }
+                            }}
                             onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              field.onChange(isNaN(value) ? undefined : value);
+                              // When typing, handle empty string as 0 internally
+                              const value = e.currentTarget.value === "" ? 0 : parseInt(e.currentTarget.value);
+                              field.onChange(isNaN(value) ? 0 : value);
                             }}
                             className="appearance-none"
                           />
@@ -947,9 +962,9 @@ export default function ProblemForm({ problem, onClose, mode }: ProblemFormProps
                   {constraintFields.length > 0 ? (
                     constraintFields.map((field, index) => (
                       <div key={field.id} className="flex items-center space-x-2">
-                        {(typeof field === "string" && field.trim() !== "") || confirmedConstraints[index] ? (
+                        {confirmedConstraints[index] ? (
                           <>
-                            <span className="text-sm text-gray-700 flex-grow">• {typeof field === "string" ? field : form.getValues(`constraints.${index}`)}</span>
+                            <span className="text-sm text-gray-700 flex-grow">• {form.getValues(`constraints.${index}`)}</span>
                             <Button
                               type="button"
                               variant="ghost"
