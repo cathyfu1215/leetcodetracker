@@ -67,7 +67,6 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
   const [difficulty, setDifficulty] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("latest");
   const [filterStarred, setFilterStarred] = useState<boolean>(false);
-  const [filterCompleted, setFilterCompleted] = useState<boolean>(false);
   const { toast } = useToast();
   
   const handleProblemClick = (id: number) => {
@@ -152,12 +151,8 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
         // If filterStarred is true, only show starred problems
         const matchesStarred = 
           !filterStarred || (problem.isStarred === true);
-          
-        // If filterCompleted is true, only show completed problems
-        const matchesCompleted = 
-          !filterCompleted || (problem.isCompleted === true);
         
-        return matchesSearch && matchesDifficulty && matchesStarred && matchesCompleted;
+        return matchesSearch && matchesDifficulty && matchesStarred;
       })
       .sort((a, b) => {
         switch (sortBy) {
@@ -171,7 +166,7 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
             return 0;
         }
       });
-  }, [problems, searchTerm, difficulty, sortBy, filterStarred, filterCompleted]);
+  }, [problems, searchTerm, difficulty, sortBy, filterStarred]);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -196,12 +191,12 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
           <div className="flex mt-2 flex-wrap gap-2">
             {filterStarred && (
               <div className="bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300 text-xs px-2 py-0.5 rounded-full flex items-center">
-                <Star className="h-3 w-3 mr-1" /> Starred
-              </div>
-            )}
-            {filterCompleted && (
-              <div className="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-300 text-xs px-2 py-0.5 rounded-full flex items-center">
-                <CheckSquare className="h-3 w-3 mr-1" /> Completed
+                <Star 
+                  className="h-3 w-3 mr-1" 
+                  fill="currentColor" 
+                  strokeWidth={2}
+                  stroke="white"
+                /> Starred
               </div>
             )}
             {difficulty !== "all" && (
@@ -260,42 +255,20 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
                   onClick={() => setFilterStarred(!filterStarred)}
                 >
                   <Star 
-                    className={`h-4 w-4 ${filterStarred ? "text-white" : "text-amber-500"}`} 
+                    className={`h-4 w-4 ${
+                      filterStarred 
+                        ? "text-white" 
+                        : "text-amber-500 hover:text-amber-400"
+                    }`} 
                     fill={filterStarred ? "white" : "none"} 
-                    strokeWidth={filterStarred ? 2.5 : 1.8}
+                    strokeWidth={filterStarred ? 2 : 1.8}
+                    stroke={filterStarred ? "white" : "currentColor"}
                   />
                   <span className="sr-only">Filter starred</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
                 <p>{filterStarred ? "Show all problems" : "Filter to show only starred problems"}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={filterCompleted ? "default" : "outline"} 
-                  size="icon"
-                  className={`h-9 w-9 ${
-                    filterCompleted 
-                      ? "bg-green-500 hover:bg-green-600 shadow-sm scale-105" 
-                      : "hover:bg-green-100 hover:border-green-300"
-                  } transition-all duration-200`}
-                  onClick={() => setFilterCompleted(!filterCompleted)}
-                >
-                  <CheckSquare 
-                    className={`h-4 w-4 ${filterCompleted ? "text-white" : "text-green-500"}`} 
-                    fill={filterCompleted ? "white" : "none"} 
-                    strokeWidth={filterCompleted ? 2.5 : 1.8}
-                  />
-                  <span className="sr-only">Filter completed</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{filterCompleted ? "Show all problems" : "Filter to show only completed problems"}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -382,6 +355,7 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
                                     ? "text-green-500 fill-green-500 stroke-white animate-checkmark-pop" 
                                     : "text-slate-400 hover:text-green-400"}`} 
                                   strokeWidth={problem.isCompleted ? 2.5 : 1.8}
+                                  stroke={problem.isCompleted ? "white" : "currentColor"}
                                 />
                                 <span className="sr-only">
                                   {problem.isCompleted ? "Mark incomplete" : "Mark complete"}

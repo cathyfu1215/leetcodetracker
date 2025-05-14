@@ -210,22 +210,23 @@ export default function ProblemDetail() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
-                    variant={problem.isStarred ? "default" : "outline"} 
-                    size="sm" 
-                    onClick={() => toggleStarredMutation.mutate()}
-                    className={`flex items-center ${
+                    variant="ghost"
+                    size="icon"
+                    className={`h-9 w-9 ${
                       problem.isStarred 
-                        ? "bg-amber-500 hover:bg-amber-600 shadow-sm" 
-                        : "text-amber-500 hover:bg-amber-50 hover:text-amber-600 border-amber-200"
-                    } transition-all duration-150`}
+                        ? "bg-amber-100 dark:bg-amber-900/30 ring-1 ring-amber-200 dark:ring-amber-700/50" 
+                        : "hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                    } transition-all duration-150 transform hover:scale-110 hover:shadow-sm`}
+                    onClick={() => toggleStarredMutation.mutate()}
                     disabled={toggleStarredMutation.isPending}
                   >
                     <Star 
-                      className="mr-1.5 h-3 w-3" 
-                      fill={problem.isStarred ? "white" : "none"} 
+                      className={`h-4 w-4 ${problem.isStarred 
+                        ? "text-amber-500 fill-amber-500" 
+                        : "text-slate-400 hover:text-amber-400"}`} 
                       strokeWidth={problem.isStarred ? 2 : 1.8}
                     />
-                    {problem.isStarred ? "Starred" : "Star"}
+                    <span className="sr-only">{problem.isStarred ? "Remove from starred" : "Add to starred"}</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -237,24 +238,25 @@ export default function ProblemDetail() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
-                    variant={problem.isCompleted ? "default" : "outline"} 
-                    size="sm" 
-                    onClick={() => toggleCompletedMutation.mutate()}
-                    className={`flex items-center ${
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-9 w-9 ${
                       problem.isCompleted 
-                        ? "bg-green-500 hover:bg-green-600 shadow-sm" 
-                        : "text-green-500 hover:bg-green-50 hover:text-green-600 border-green-200"
-                    } transition-all duration-150`}
+                        ? "bg-green-100 dark:bg-green-900/30 ring-1 ring-green-200 dark:ring-green-700/50" 
+                        : "hover:bg-green-50 dark:hover:bg-green-900/20"
+                    } transition-all duration-150 transform hover:scale-110 hover:shadow-sm`}
+                    onClick={() => toggleCompletedMutation.mutate()}
                     disabled={toggleCompletedMutation.isPending}
                   >
                     <CheckSquare 
-                      className={`mr-1.5 h-3 w-3 ${problem.isCompleted ? "animate-checkmark-pop" : ""}`}
-                      fill={problem.isCompleted ? "white" : "none"} 
+                      className={`h-4 w-4 ${problem.isCompleted 
+                        ? "text-green-500 fill-green-500 stroke-white animate-checkmark-pop" 
+                        : "text-slate-400 hover:text-green-400"}`} 
                       strokeWidth={problem.isCompleted ? 2.5 : 1.8}
                       stroke={problem.isCompleted ? "white" : "currentColor"}
                     />
-                    {problem.isCompleted ? "Completed" : "Mark Complete"}
+                    <span className="sr-only">{problem.isCompleted ? "Mark as not completed" : "Mark as completed"}</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
