@@ -48,6 +48,26 @@
   --radius: 0.5rem;
 }
 
+/* Animation for checkmark toggling */
+@keyframes checkmark-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.checkmark-toggle {
+  animation: checkmark-pulse 0.4s ease-in-out;
+}
+
 @layer base {
   * {
     @apply border-border;

@@ -71,6 +71,8 @@ export const problemSchema = z.object({
   tricks: z.array(trickReferenceSchema),
   notes: z.string().nullable().optional(),
   difficulty: difficultyEnum,
+  isStarred: z.boolean().default(false).optional(),
+  isCompleted: z.boolean().default(false).optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

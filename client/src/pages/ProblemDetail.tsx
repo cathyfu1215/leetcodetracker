@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ExternalLink, Edit, Trash2, Puzzle, Lightbulb, Eye, EyeOff } from "lucide-react";
+import { Loader2, ExternalLink, Edit, Trash2, Puzzle, Lightbulb, Eye, EyeOff, Star, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Problem } from "@shared/schema";
@@ -12,6 +12,7 @@ import { renderMarkdown } from "@/lib/markdown";
 import ProblemForm from "@/components/ProblemForm";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function ProblemDetail() {
   const [, setLocation] = useLocation();
@@ -37,14 +38,68 @@ export default function ProblemDetail() {
         throw new Error("Invalid problem ID");
       }
       const response = await apiRequest('GET', `/api/problems/${problemId}`);
-      return response.json();
+      const data = await response.json();
+      // Default values for our new fields
+      return {
+        ...data,
+        isStarred: data.isStarred || false,
+        isCompleted: data.isCompleted || false
+      };
     },
     enabled: !!problemId,
-    onSuccess: (data) => {
-      console.log("Fetched problem data:", data);
+  });
+  
+  const toggleStarredMutation = useMutation({
+    mutationFn: async () => {
+      if (!problem) return;
+      const isStarred = problem.isStarred || false;
+      await apiRequest('PATCH', `/api/problems/${problemId}`, {
+        isStarred: !isStarred
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/problems', problemId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/problems'] });
+      
+      const newStarredState = !(problem?.isStarred || false);
+      toast({
+        title: newStarredState ? "Problem starred" : "Problem unstarred",
+        description: `Problem has been ${newStarredState ? 'added to' : 'removed from'} your starred list.`,
+      });
     },
     onError: (error) => {
-      console.error("Error fetching problem data:", error);
+      toast({
+        title: "Error",
+        description: `Failed to update starred status: ${error}`,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const toggleCompletedMutation = useMutation({
+    mutationFn: async () => {
+      if (!problem) return;
+      const isCompleted = problem.isCompleted || false;
+      await apiRequest('PATCH', `/api/problems/${problemId}`, {
+        isCompleted: !isCompleted
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/problems', problemId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/problems'] });
+      
+      const newCompletedState = !(problem?.isCompleted || false);
+      toast({
+        title: newCompletedState ? "Problem marked as completed" : "Problem marked as not completed",
+        description: `Problem has been marked as ${newCompletedState ? 'completed' : 'not completed'}.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update completion status: ${error}`,
+        variant: "destructive",
+      });
     },
   });
   
@@ -151,6 +206,63 @@ export default function ProblemDetail() {
           </div>
           
           <div className="flex space-x-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant={problem.isStarred ? "default" : "outline"} 
+                    size="sm" 
+                    onClick={() => toggleStarredMutation.mutate()}
+                    className={`flex items-center ${
+                      problem.isStarred 
+                        ? "bg-amber-500 hover:bg-amber-600 shadow-sm" 
+                        : "text-amber-500 hover:bg-amber-50 hover:text-amber-600 border-amber-200"
+                    } transition-all duration-150`}
+                    disabled={toggleStarredMutation.isPending}
+                  >
+                    <Star 
+                      className="mr-1.5 h-3 w-3" 
+                      fill={problem.isStarred ? "white" : "none"} 
+                      strokeWidth={problem.isStarred ? 2 : 1.8}
+                    />
+                    {problem.isStarred ? "Starred" : "Star"}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{problem.isStarred ? "Remove from starred" : "Add to starred"}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant={problem.isCompleted ? "default" : "outline"} 
+                    size="sm" 
+                    onClick={() => toggleCompletedMutation.mutate()}
+                    className={`flex items-center ${
+                      problem.isCompleted 
+                        ? "bg-green-500 hover:bg-green-600 shadow-sm" 
+                        : "text-green-500 hover:bg-green-50 hover:text-green-600 border-green-200"
+                    } transition-all duration-150`}
+                    disabled={toggleCompletedMutation.isPending}
+                  >
+                    <CheckSquare 
+                      className={`mr-1.5 h-3 w-3 ${problem.isCompleted ? "animate-checkmark-pop" : ""}`}
+                      fill={problem.isCompleted ? "white" : "none"} 
+                      strokeWidth={problem.isCompleted ? 2.5 : 1.8}
+                      stroke={problem.isCompleted ? "white" : "currentColor"}
+                    />
+                    {problem.isCompleted ? "Completed" : "Mark Complete"}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{problem.isCompleted ? "Mark as not completed" : "Mark as completed"}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
             <Button 
               variant="outline" 
               size="sm" 
