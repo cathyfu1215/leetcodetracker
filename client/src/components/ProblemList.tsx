@@ -149,11 +149,13 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
           difficulty === "all" || 
           problem.difficulty === difficulty;
         
+        // If filterStarred is true, only show starred problems
         const matchesStarred = 
-          !filterStarred || (problem.isStarred || false);
+          !filterStarred || (problem.isStarred === true);
           
+        // If filterCompleted is true, only show completed problems
         const matchesCompleted = 
-          !filterCompleted || (problem.isCompleted || false);
+          !filterCompleted || (problem.isCompleted === true);
         
         return matchesSearch && matchesDifficulty && matchesStarred && matchesCompleted;
       })
@@ -169,7 +171,7 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
             return 0;
         }
       });
-  }, [problems, searchTerm, difficulty, sortBy]);
+  }, [problems, searchTerm, difficulty, sortBy, filterStarred, filterCompleted]);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -250,15 +252,23 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
                 <Button
                   variant={filterStarred ? "default" : "outline"} 
                   size="icon"
-                  className={`h-9 w-9 ${filterStarred ? "bg-amber-500 hover:bg-amber-600" : ""}`}
+                  className={`h-9 w-9 ${
+                    filterStarred 
+                      ? "bg-amber-500 hover:bg-amber-600 shadow-sm scale-105" 
+                      : "hover:bg-amber-100 hover:border-amber-300"
+                  } transition-all duration-200`}
                   onClick={() => setFilterStarred(!filterStarred)}
                 >
-                  <Star className={`h-4 w-4 ${filterStarred ? "text-white" : "text-amber-500"}`} fill={filterStarred ? "white" : "none"} />
+                  <Star 
+                    className={`h-4 w-4 ${filterStarred ? "text-white" : "text-amber-500"}`} 
+                    fill={filterStarred ? "white" : "none"} 
+                    strokeWidth={filterStarred ? 2.5 : 1.8}
+                  />
                   <span className="sr-only">Filter starred</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{filterStarred ? "Show all problems" : "Show only starred problems"}</p>
+                <p>{filterStarred ? "Show all problems" : "Filter to show only starred problems"}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -269,15 +279,23 @@ export default function ProblemList({ problems, searchTerm, onAddNew, onSearch }
                 <Button
                   variant={filterCompleted ? "default" : "outline"} 
                   size="icon"
-                  className={`h-9 w-9 ${filterCompleted ? "bg-green-500 hover:bg-green-600" : ""}`}
+                  className={`h-9 w-9 ${
+                    filterCompleted 
+                      ? "bg-green-500 hover:bg-green-600 shadow-sm scale-105" 
+                      : "hover:bg-green-100 hover:border-green-300"
+                  } transition-all duration-200`}
                   onClick={() => setFilterCompleted(!filterCompleted)}
                 >
-                  <CheckSquare className={`h-4 w-4 ${filterCompleted ? "text-white" : "text-green-500"}`} fill={filterCompleted ? "white" : "none"} />
+                  <CheckSquare 
+                    className={`h-4 w-4 ${filterCompleted ? "text-white" : "text-green-500"}`} 
+                    fill={filterCompleted ? "white" : "none"} 
+                    strokeWidth={filterCompleted ? 2.5 : 1.8}
+                  />
                   <span className="sr-only">Filter completed</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{filterCompleted ? "Show all problems" : "Show only completed problems"}</p>
+                <p>{filterCompleted ? "Show all problems" : "Filter to show only completed problems"}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
